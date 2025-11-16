@@ -1,0 +1,46 @@
+{% extends 'auctions/base.html' %}
+
+{% block title %}Register - Online Auction System{% endblock %}
+
+{% block content %}
+<div style="max-width: 500px; margin: 2rem auto; background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+    <h2>Create Account</h2>
+    
+    <form method="POST" style="margin-top: 1.5rem;">
+        {% csrf_token %}
+        
+        <div style="margin-bottom: 1rem;">
+            <label style="display: block; margin-bottom: 0.5rem;">Username:</label>
+            <input type="text" name="username" required style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+        </div>
+        
+        <div style="margin-bottom: 1rem;">
+            <label style="display: block; margin-bottom: 0.5rem;">Email:</label>
+            <input type="email" name="email" required style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+        </div>
+        
+        <div style="margin-bottom: 1rem;">
+            <label style="display: block; margin-bottom: 0.5rem;">Password:</label>
+            <input type="password" name="password" required style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+        </div>
+        
+        <div style="margin-bottom: 1rem;">
+            <label style="display: block; margin-bottom: 0.5rem;">Confirm Password:</label>
+            <input type="password" name="confirm_password" required style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+        </div>
+        
+        <div style="margin-bottom: 1rem;">
+            <label style="display: flex; align-items: center; gap: 0.5rem;">
+                <input type="checkbox" name="is_seller">
+                <span>Register as Seller (can create auctions)</span>
+            </label>
+        </div>
+        
+        <button type="submit" class="btn" style="width: 100%;">Register</button>
+    </form>
+    
+    <p style="margin-top: 1rem; text-align: center;">
+        Already have an account? <a href="{% url 'login' %}">Login here</a>
+    </p>
+</div>
+{% endblock %}
