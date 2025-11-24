@@ -2,11 +2,36 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from .models import User, Auction
+from .models import User, Auction, AuctionImage
+from .forms import AuctionForm
+from django.utils import timezone
+from datetime import timedelta
 
 # Homepage
 def index(request):
     auctions = Auction.objects.filter(status='active').order_by('-created_at')[:10]
+    
+    # Add bid count and time remaining for each auction
+    for auction in auctions:
+        auction.bid_count = auction.bids.count()
+        
+        # Calculate time remaining
+        now = timezone.now()
+        if auction.end_time > now:
+            time_diff = auction.end_time - now
+            days = time_diff.days
+            hours = time_diff.seconds // 3600
+            minutes = (time_diff.seconds % 3600) // 60
+            
+            if days > 0:
+                auction.time_remaining = f"{days} days {hours} hours"
+            elif hours > 0:
+                auction.time_remaining = f"{hours} hours {minutes} minutes"
+            else:
+                auction.time_remaining = f"{minutes} minutes"
+        else:
+            auction.time_remaining = "Ended"
+    
     context = {
         'auctions': auctions
     }
@@ -42,7 +67,6 @@ def register(request):
             is_seller=is_seller
         )
         user.save()
-        
         messages.success(request, 'Account created successfully! Please login.')
         return redirect('login')
     
@@ -53,7 +77,6 @@ def login_view(request):
     if request.method == 'POST':
         username = request.POST['username']
         password = request.POST['password']
-        
         user = authenticate(request, username=username, password=password)
         
         if user is not None:
@@ -71,3 +94,35 @@ def logout_view(request):
     logout(request)
     messages.success(request, 'You have been logged out successfully!')
     return redirect('index')
+
+@login_required
+def create_auction(request):
+    # Check if user is a seller
+    if not request.user.is_seller:
+        messages.error(request, "Only sellers can create auctions.")
+        return redirect('index')
+    
+    if request.method == 'POST':
+        form = AuctionForm(request.POST, request.FILES)
+        if form.is_valid():
+            auction = form.save(commit=False)
+            auction.seller = request.user
+            auction.current_price = auction.starting_price
+            auction.save()
+            
+            # Handle multiple images
+            images = request.FILES.getlist('images')
+            if images:
+                for i, image in enumerate(images[:5]):  # Limit to 5 images
+                    AuctionImage.objects.create(
+                        auction=auction,
+                        image=image,
+                        is_primary=(i == 0)  # First image is primary
+                    )
+            
+            messages.success(request, "Auction created successfully!")
+            return redirect('index')
+    else:
+        form = AuctionForm()
+    
+    return render(request, 'auctions/create_auction.html', {'form': form})

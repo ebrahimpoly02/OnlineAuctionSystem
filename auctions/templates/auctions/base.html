@@ -190,9 +190,9 @@
     
     <div class="nav-links">
         <a href="{% url 'index' %}">Browse</a>
-        {% if user.is_authenticated and user.is_seller %}
-            <a href="#">Sell</a>
-        {% endif %}
+      {% if user.is_authenticated and user.is_seller %}
+    <a href="{% url 'create_auction' %}">Sell</a>
+{% endif %}
         <a href="#">Watchlist</a>
     </div>
     

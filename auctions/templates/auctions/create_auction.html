@@ -1,0 +1,361 @@
+{% extends 'auctions/base.html' %}
+
+{% block title %}Create Auction - Bidfinity{% endblock %}
+
+{% block content %}
+<style>
+    .form-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        padding: 2rem;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .form-layout {
+        display: grid;
+        grid-template-columns: 400px 1fr;
+        gap: 3rem;
+    }
+    
+    .image-upload-section {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .image-preview-main {
+        width: 100%;
+        height: 280px;
+        background-color: #f0f0f0;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #999;
+        font-size: 0.9rem;
+        border: 2px dashed #ddd;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .image-preview-main img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .image-preview-text {
+        text-align: center;
+    }
+    
+    .thumbnail-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.75rem;
+    }
+    
+    .thumbnail-box {
+        width: 100%;
+        aspect-ratio: 1;
+        background-color: #f0f0f0;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px dashed #ddd;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .thumbnail-box img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .thumbnail-box .plus {
+        font-size: 1.5rem;
+        color: #999;
+    }
+    
+    .form-fields {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .form-group label {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #1a2332;
+    }
+    
+    .form-input, .form-textarea, .form-select {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 1rem;
+    }
+    
+    .form-textarea {
+        resize: vertical;
+        min-height: 100px;
+    }
+    
+    .radio-group {
+        display: flex;
+        gap: 1.5rem;
+        margin-top: 0.5rem;
+    }
+    
+    .radio-group label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: normal;
+    }
+    
+    .terms-checkbox {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 1rem;
+        background-color: #f9f9f9;
+        border-radius: 8px;
+    }
+    
+    .btn-submit {
+        background-color: #1a2332;
+        color: white;
+        padding: 0.75rem 2rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        cursor: pointer;
+        width: 200px;
+        margin-top: 1rem;
+    }
+    
+    .btn-submit:hover {
+        background-color: #2d3e50;
+    }
+    
+    .error-message {
+        color: #dc3545;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+    
+    #id_images {
+        display: none;
+    }
+</style>
+
+<div class="form-container">
+    <h1 style="margin-bottom: 2rem; color: #1a2332;">Create Auction</h1>
+    
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div class="form-layout">
+            <!-- Left Side: Image Upload -->
+            <div class="image-upload-section">
+<div class="image-preview-main" id="mainPreview">                    <div class="image-preview-text">
+                        <p>Upload up to 5 images</p>
+                        <p style="font-size: 2rem; margin: 0.5rem 0;">+</p>
+                    </div>
+                </div>
+                
+                <div class="thumbnail-grid">
+                    <div class="thumbnail-box" id="thumb1">
+                        <span class="plus">+</span>
+                    </div>
+                    <div class="thumbnail-box" id="thumb2">
+                        <span class="plus">+</span>
+                    </div>
+                    <div class="thumbnail-box" id="thumb3">
+                        <span class="plus">+</span>
+                    </div>
+                    <div class="thumbnail-box" id="thumb4">
+                        <span class="plus">+</span>
+                    </div>
+                </div>
+                
+                {{ form.images }}
+                {% if form.images.errors %}
+                    <div class="error-message">{{ form.images.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <!-- Right Side: Form Fields -->
+            <div class="form-fields">
+                <div class="form-group">
+                    <label for="{{ form.title.id_for_label }}">Title</label>
+                    {{ form.title }}
+                    {% if form.title.errors %}
+                        <div class="error-message">{{ form.title.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.category.id_for_label }}">Category</label>
+                    {{ form.category }}
+                    {% if form.category.errors %}
+                        <div class="error-message">{{ form.category.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label>Condition</label>
+                    <div class="radio-group">
+                        {{ form.condition }}
+                    </div>
+                    {% if form.condition.errors %}
+                        <div class="error-message">{{ form.condition.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.description.id_for_label }}">Description</label>
+                    {{ form.description }}
+                    {% if form.description.errors %}
+                        <div class="error-message">{{ form.description.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.starting_price.id_for_label }}">Starting price (BHD)</label>
+                    {{ form.starting_price }}
+                    {% if form.starting_price.errors %}
+                        <div class="error-message">{{ form.starting_price.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.minimum_bid_increment.id_for_label }}">Minimum bid increment (BHD)</label>
+                    {{ form.minimum_bid_increment }}
+                    {% if form.minimum_bid_increment.errors %}
+                        <div class="error-message">{{ form.minimum_bid_increment.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.buy_now_price.id_for_label }}">Buy Now Price (BHD) (Optional)</label>
+                    {{ form.buy_now_price }}
+                    {% if form.buy_now_price.errors %}
+                        <div class="error-message">{{ form.buy_now_price.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.end_time.id_for_label }}">Ends at</label>
+                    {{ form.end_time }}
+                    {% if form.end_time.errors %}
+                        <div class="error-message">{{ form.end_time.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label>Shipping method</label>
+                    <div class="radio-group">
+                        {{ form.shipping_method }}
+                    </div>
+                    {% if form.shipping_method.errors %}
+                        <div class="error-message">{{ form.shipping_method.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.shipping_cost.id_for_label }}">Shipping cost (if applicable)</label>
+                    {{ form.shipping_cost }}
+                    {% if form.shipping_cost.errors %}
+                        <div class="error-message">{{ form.shipping_cost.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.location.id_for_label }}">Location</label>
+                    {{ form.location }}
+                    {% if form.location.errors %}
+                        <div class="error-message">{{ form.location.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="terms-checkbox">
+                    <input type="checkbox" id="terms" name="terms" required>
+                    <label for="terms" style="font-weight: normal;">
+                        I confirm the item is legal to sell here and the description is accurate
+                    </label>
+                </div>
+                
+                <button type="submit" class="btn-submit">Create</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Image preview functionality for multiple images
+    let selectedFiles = [];
+    
+    // Make all boxes clickable
+    document.getElementById('mainPreview').addEventListener('click', function() {
+        document.getElementById('id_images').click();
+    });
+    
+    document.getElementById('thumb1').addEventListener('click', function() {
+        document.getElementById('id_images').click();
+    });
+    
+    document.getElementById('thumb2').addEventListener('click', function() {
+        document.getElementById('id_images').click();
+    });
+    
+    document.getElementById('thumb3').addEventListener('click', function() {
+        document.getElementById('id_images').click();
+    });
+    
+    document.getElementById('thumb4').addEventListener('click', function() {
+        document.getElementById('id_images').click();
+    });
+    
+    document.getElementById('id_images').addEventListener('change', function(e) {
+        const files = Array.from(e.target.files).slice(0, 5); // Limit to 5 images
+        selectedFiles = files;
+        
+        if (files.length > 0) {
+            // Show first image in main preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('mainPreview').innerHTML = 
+                    '<img src="' + e.target.result + '" alt="Preview">';
+            }
+            reader.readAsDataURL(files[0]);
+            
+            // Show thumbnails for remaining images
+            for (let i = 0; i < 4; i++) {
+                const thumbElement = document.getElementById('thumb' + (i + 1));
+                if (files[i + 1]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        thumbElement.innerHTML = '<img src="' + e.target.result + '" alt="Thumbnail">';
+                    }
+                    reader.readAsDataURL(files[i + 1]);
+                } else {
+                    thumbElement.innerHTML = '<span class="plus">+</span>';
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

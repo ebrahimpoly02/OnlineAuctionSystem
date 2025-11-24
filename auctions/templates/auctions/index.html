@@ -1,4 +1,5 @@
 {% extends 'auctions/base.html' %}
+{% load static %}
 
 {% block title %}Home - Bidfinity{% endblock %}
 
@@ -6,38 +7,43 @@
 <h1 style="font-size: 2rem; margin-bottom: 1rem;">Featured Auctions</h1>
 
 {% if auctions %}
-    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
-        {% for auction in auctions %}
-            <div class="card">
-                <!-- Image Placeholder -->
-                <div style="width: 100%; height: 200px; background-color: #e0e0e0; border-radius: 8px; margin-bottom: 1rem;"></div>
-                
-                <!-- Auction Info -->
-                <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem;">{{ auction.title }}</h3>
-                
-                <p style="color: #666; font-size: 0.9rem; margin-bottom: 0.5rem;">
-                    {{ auction.description|truncatewords:10 }}
-                </p>
-                
-                <p style="font-weight: bold; font-size: 1.1rem; color: #1a2332; margin: 0.5rem 0;">
-                    Current Bid: {{ auction.current_price }} BHD
-                </p>
-                
-                <p style="color: #666; font-size: 0.9rem;">
-                    Ends in: 2 days 5 hours
-                </p>
-                
-                <p style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;">
-                    Number of bids: 5
-                </p>
-                
-                <p style="color: #888; font-size: 0.85rem;">
-                    Seller: {{ auction.seller.username }}
-                </p>
-            </div>
-        {% endfor %}
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
+    {% for auction in auctions %}
+    <div class="card">
+        <!-- Auction Image -->
+        <div style="width: 100%; height: 200px; background-color: #e0e0e0; border-radius: 8px; margin-bottom: 1rem; overflow: hidden;">
+            {% if auction.images.exists %}
+                {% with auction.images.first as primary_image %}
+                    <img src="{{ primary_image.image.url }}" alt="{{ auction.title }}" style="width: 100%; height: 100%; object-fit: cover;">
+                {% endwith %}
+            {% endif %}
+        </div>
+        
+        <!-- Auction Info -->
+        <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem;">{{ auction.title }}</h3>
+        <p style="color: #666; font-size: 0.9rem; margin-bottom: 0.5rem;">
+            {{ auction.description|truncatewords:10 }}
+        </p>
+        
+        <p style="font-weight: bold; font-size: 1.1rem; color: #1a2332; margin: 0.5rem 0;">
+            Current Bid: {{ auction.current_price }} BHD
+        </p>
+        
+        <p style="color: #666; font-size: 0.9rem;">
+            Ends in: {{ auction.time_remaining }}
+        </p>
+        
+        <p style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;">
+            Number of bids: {{ auction.bid_count }}
+        </p>
+        
+        <p style="color: #888; font-size: 0.85rem;">
+            Seller: {{ auction.seller.username }}
+        </p>
     </div>
+    {% endfor %}
+</div>
 {% else %}
-    <p style="color: #666; margin-top: 2rem;">No active auctions at the moment.</p>
+<p style="color: #666; margin-top: 2rem;">No active auctions at the moment.</p>
 {% endif %}
 {% endblock %}

@@ -33,21 +33,46 @@ class Auction(models.Model):
         ('cancelled', 'Cancelled'),
     ]
     
+    CONDITION_CHOICES = [
+        ('new', 'New'),
+        ('like_new', 'Like New'),
+        ('good', 'Good'),
+        ('fair', 'Fair'),
+        ('poor', 'Poor'),
+    ]
+    
     seller = models.ForeignKey(User, on_delete=models.CASCADE, related_name='auctions_created')
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
     title = models.CharField(max_length=200)
     description = models.TextField()
     starting_price = models.DecimalField(max_digits=10, decimal_places=2)
     current_price = models.DecimalField(max_digits=10, decimal_places=2)
+    minimum_bid_increment = models.DecimalField(max_digits=10, decimal_places=2, default=1.00)
     buy_now_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    image_url = models.CharField(max_length=500, blank=True, null=True)
+    condition = models.CharField(max_length=20, choices=CONDITION_CHOICES, default='good')
+    location = models.CharField(max_length=100, blank=True, null=True)
     start_time = models.DateTimeField(default=timezone.now)
     end_time = models.DateTimeField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
     created_at = models.DateTimeField(auto_now_add=True)
+    shipping_method = models.CharField(max_length=20, choices=[('pickup', 'Pickup Only'), ('shipping', 'Shipping Available')], default='pickup')
+    shipping_cost = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     
     def __str__(self):
         return self.title
+
+# Auction Images Table (for multiple images per auction)
+class AuctionImage(models.Model):
+    auction = models.ForeignKey(Auction, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='auction_images/')
+    is_primary = models.BooleanField(default=False)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-is_primary', 'uploaded_at']
+    
+    def __str__(self):
+        return f"Image for {self.auction.title}"
 
 # Bids Table
 class Bid(models.Model):
