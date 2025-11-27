@@ -159,6 +159,12 @@
     #id_images {
         display: none;
     }
+    
+    .form-hint {
+        font-size: 0.875rem;
+        color: #666;
+        margin-top: 0.25rem;
+    }
 </style>
 
 <div class="form-container">
@@ -170,7 +176,8 @@
         <div class="form-layout">
             <!-- Left Side: Image Upload -->
             <div class="image-upload-section">
-<div class="image-preview-main" id="mainPreview">                    <div class="image-preview-text">
+                <div class="image-preview-main" id="mainPreview">
+                    <div class="image-preview-text">
                         <p>Upload up to 5 images</p>
                         <p style="font-size: 2rem; margin: 0.5rem 0;">+</p>
                     </div>
@@ -258,8 +265,9 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="{{ form.end_time.id_for_label }}">Ends at</label>
+                    <label for="{{ form.end_time.id_for_label }}">Auction End Date & Time</label>
                     {{ form.end_time }}
+                    <div class="form-hint">Select when the auction should end (minimum 1 hour from now)</div>
                     {% if form.end_time.errors %}
                         <div class="error-message">{{ form.end_time.errors }}</div>
                     {% endif %}
@@ -308,7 +316,7 @@
     // Image preview functionality for multiple images
     let selectedFiles = [];
     
-    // Make all boxes clickable
+    // Make boxes clickable
     document.getElementById('mainPreview').addEventListener('click', function() {
         document.getElementById('id_images').click();
     });
@@ -357,5 +365,22 @@
             }
         }
     });
+    
+    // set min datetime to 1 hour from now
+    const endTimeInput = document.getElementById('{{ form.end_time.id_for_label }}');
+    if (endTimeInput) {
+        const now = new Date();
+        now.setHours(now.getHours() + 1);
+        
+        // format: YYYY-MM-DDTHH:MM
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        
+        const minDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+        endTimeInput.min = minDateTime;
+    }
 </script>
 {% endblock %}
