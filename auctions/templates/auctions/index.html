@@ -7,7 +7,7 @@
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
     <h1 style="font-size: 2rem; margin: 0;">Featured Auctions</h1>
     
-    <!-- Filters and Sort -->
+    <!-- Filters sorting -->
     <div style="display: flex; gap: 1rem;">
         <form method="get" action="{% url 'index' %}" style="display: flex; gap: 0.5rem;">
             <!-- Preserve search query -->
@@ -15,7 +15,7 @@
                 <input type="hidden" name="search" value="{{ search_query }}">
             {% endif %}
             
-            <!-- Category Filter -->
+            <!-- Category filters -->
             <select name="category" style="padding: 0.5rem; border-radius: 5px; border: 1px solid #ddd;">
                 <option value="">All Categories</option>
                 {% for cat in categories %}
@@ -25,7 +25,7 @@
                 {% endfor %}
             </select>
             
-            <!-- Sort By -->
+            <!-- Sort by -->
             <select name="sort" style="padding: 0.5rem; border-radius: 5px; border: 1px solid #ddd;">
                 <option value="-created_at" {% if sort_by == '-created_at' %}selected{% endif %}>Newest First</option>
                 <option value="ending_soon" {% if sort_by == 'ending_soon' %}selected{% endif %}>Ending Soon</option>
