@@ -18,12 +18,39 @@ class MultipleFileField(forms.FileField):
         return result
 
 class AuctionForm(forms.ModelForm):
-    # Add multiple image field - NO widget parameter here!
+    # Add multiple image field
     images = MultipleFileField(
         required=False,
         label='Upload Images (up to 5)'
     )
     
+    # Define location choices
+    LOCATION_CHOICES = [
+        ('', 'Select location'),
+        ('Manama', 'Manama'),
+        ('Muharraq', 'Muharraq'),
+        ('Riffa', 'Riffa'),
+        ('Hamad Town', 'Hamad Town'),
+        ('Isa Town', 'Isa Town'),
+        ('Sitra', 'Sitra'),
+        ('Budaiya', 'Budaiya'),
+        ('Jidhafs', 'Jidhafs'),
+        ('A\'ali', 'A\'ali'),
+        ('Tubli', 'Tubli'),
+        ('Sanabis', 'Sanabis'),
+        ('Adliya', 'Adliya'),
+        ('Juffair', 'Juffair'),
+        ('Seef', 'Seef'),
+        ('Salmabad', 'Salmabad'),
+    ]
+    
+    # Override location field with choices
+    location = forms.ChoiceField(
+        choices=LOCATION_CHOICES,
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        required=True
+    )
+
     class Meta:
         model = Auction
         fields = ['title', 'description', 'category', 'condition', 'starting_price', 
@@ -61,7 +88,6 @@ class AuctionForm(forms.ModelForm):
                 'class': 'form-input',
                 'type': 'datetime-local'
             }),
-            'location': forms.Select(attrs={'class': 'form-select'}),
             'shipping_method': forms.RadioSelect(),
             'shipping_cost': forms.NumberInput(attrs={
                 'class': 'form-input',
