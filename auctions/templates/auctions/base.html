@@ -69,6 +69,11 @@
             margin: 0 2rem;
         }
         
+        .search-form {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
         .search-bar {
             width: 100%;
             padding: 0.7rem 1rem;
@@ -76,6 +81,20 @@
             border: none;
             font-size: 0.95rem;
             background-color: white;
+        }
+        
+        .search-btn {
+            padding: 0.7rem 1.5rem;
+            border-radius: 25px;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+        
+        .search-btn:hover {
+            background-color: #45a049;
         }
         
         /* Auth Buttons */
@@ -197,7 +216,10 @@
         </div>
         
         <div class="search-container">
-            <input type="text" class="search-bar" placeholder="Search for auctions">
+            <form action="{% url 'index' %}" method="get" class="search-form">
+                <input type="text" name="search" class="search-bar" placeholder="Search for auctions" value="{{ search_query }}">
+                <button type="submit" class="search-btn">Search</button>
+            </form>
         </div>
         
         <div class="auth-buttons">

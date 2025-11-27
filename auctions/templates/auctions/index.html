@@ -4,7 +4,46 @@
 {% block title %}Home - Bidfinity{% endblock %}
 
 {% block content %}
-<h1 style="font-size: 2rem; margin-bottom: 1rem;">Featured Auctions</h1>
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <h1 style="font-size: 2rem; margin: 0;">Featured Auctions</h1>
+    
+    <!-- Filters and Sort -->
+    <div style="display: flex; gap: 1rem;">
+        <form method="get" action="{% url 'index' %}" style="display: flex; gap: 0.5rem;">
+            <!-- Preserve search query -->
+            {% if search_query %}
+                <input type="hidden" name="search" value="{{ search_query }}">
+            {% endif %}
+            
+            <!-- Category Filter -->
+            <select name="category" style="padding: 0.5rem; border-radius: 5px; border: 1px solid #ddd;">
+                <option value="">All Categories</option>
+                {% for cat in categories %}
+                    <option value="{{ cat.id }}" {% if category_filter == cat.id|stringformat:"s" %}selected{% endif %}>
+                        {{ cat.name }}
+                    </option>
+                {% endfor %}
+            </select>
+            
+            <!-- Sort By -->
+            <select name="sort" style="padding: 0.5rem; border-radius: 5px; border: 1px solid #ddd;">
+                <option value="-created_at" {% if sort_by == '-created_at' %}selected{% endif %}>Newest First</option>
+                <option value="ending_soon" {% if sort_by == 'ending_soon' %}selected{% endif %}>Ending Soon</option>
+                <option value="price_low" {% if sort_by == 'price_low' %}selected{% endif %}>Price: Low to High</option>
+                <option value="price_high" {% if sort_by == 'price_high' %}selected{% endif %}>Price: High to Low</option>
+            </select>
+            
+            <button type="submit" class="btn" style="padding: 0.5rem 1rem;">Apply</button>
+        </form>
+    </div>
+</div>
+
+{% if search_query %}
+    <p style="color: #666; margin-bottom: 1rem;">
+        Showing results for: <strong>"{{ search_query }}"</strong>
+        <a href="{% url 'index' %}" style="color: #1a2332; margin-left: 0.5rem;">Clear search</a>
+    </p>
+{% endif %}
 
 {% if auctions %}
 <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
@@ -42,7 +81,13 @@
     {% endfor %}
 </div>
 {% else %}
-<p style="color: #666; margin-top: 2rem;">No active auctions at the moment.</p>
+<p style="color: #666; margin-top: 2rem;">
+    {% if search_query %}
+        No auctions found matching "{{ search_query }}".
+    {% else %}
+        No active auctions at the moment.
+    {% endif %}
+</p>
 {% endif %}
 {% endblock %}
 

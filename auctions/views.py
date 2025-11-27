@@ -2,14 +2,44 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from .models import User, Auction, AuctionImage
+from .models import User, Auction, AuctionImage, Category
 from .forms import AuctionForm
 from django.utils import timezone
 from datetime import timedelta, datetime, time
+from django.db.models import Q
 
-# Homepage
+# Homepage with search and filters
 def index(request):
-    auctions = Auction.objects.filter(status='active').order_by('-created_at')[:10]
+    # Get search query and filters from GET parameters
+    search_query = request.GET.get('search', '')
+    category_filter = request.GET.get('category', '')
+    sort_by = request.GET.get('sort', '-created_at')
+    
+    # Start with all active auctions
+    auctions = Auction.objects.filter(status='active')
+    
+    # Apply search filter
+    if search_query:
+        auctions = auctions.filter(
+            Q(title__icontains=search_query) | 
+            Q(description__icontains=search_query)
+        )
+    
+    # Apply category filter
+    if category_filter:
+        auctions = auctions.filter(category_id=category_filter)
+    
+    # Apply sorting
+    if sort_by == 'price_low':
+        auctions = auctions.order_by('current_price')
+    elif sort_by == 'price_high':
+        auctions = auctions.order_by('-current_price')
+    elif sort_by == 'ending_soon':
+        auctions = auctions.order_by('end_time')
+    else:  # default: newest first
+        auctions = auctions.order_by('-created_at')
+    
+    auctions = auctions[:50]  # Limit to 50 results
     
     # Add bid count and time remaining for each auction
     for auction in auctions:
@@ -32,8 +62,15 @@ def index(request):
         else:
             auction.time_remaining = "Ended"
     
+    # Get all categories for filter dropdown
+    categories = Category.objects.all()
+    
     context = {
-        'auctions': auctions
+        'auctions': auctions,
+        'categories': categories,
+        'search_query': search_query,
+        'category_filter': category_filter,
+        'sort_by': sort_by,
     }
     return render(request, 'auctions/index.html', context)
 

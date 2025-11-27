@@ -51,7 +51,7 @@ class AuctionForm(forms.ModelForm):
         required=True
     )
     
-    # Add separate date and time fields for better UX
+    # Add separate date and time fields 
     end_date = forms.DateField(
         widget=forms.DateInput(attrs={
             'class': 'form-input',
