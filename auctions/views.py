@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from .models import User, Auction, AuctionImage
 from .forms import AuctionForm
 from django.utils import timezone
-from datetime import timedelta
+from datetime import timedelta, datetime, time
 
 # Homepage
 def index(request):
@@ -108,6 +108,25 @@ def create_auction(request):
             auction = form.save(commit=False)
             auction.seller = request.user
             auction.current_price = auction.starting_price
+            
+            # Combine date and time fields into end_time
+            end_date = form.cleaned_data['end_date']
+            hour = int(form.cleaned_data['end_time_hour'])
+            minute = int(form.cleaned_data['end_time_minute'])
+            period = form.cleaned_data['end_time_period']
+            
+            # Convert to 24-hour format
+            if period == 'PM' and hour != 12:
+                hour += 12
+            elif period == 'AM' and hour == 12:
+                hour = 0
+            
+            end_time_obj = time(hour=hour, minute=minute)
+            auction.end_time = datetime.combine(end_date, end_time_obj)
+            
+            # Make timezone aware
+            auction.end_time = timezone.make_aware(auction.end_time)
+            
             auction.save()
             
             # Handle multiple images

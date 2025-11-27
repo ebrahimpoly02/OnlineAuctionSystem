@@ -265,12 +265,37 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="{{ form.end_time.id_for_label }}">Auction End Date & Time</label>
-                    {{ form.end_time }}
-                    <div class="form-hint">Select when the auction should end (minimum 1 hour from now)</div>
-                    {% if form.end_time.errors %}
-                        <div class="error-message">{{ form.end_time.errors }}</div>
-                    {% endif %}
+                    <label>Auction End Time</label>
+                    <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 0.5rem; margin-top: 0.5rem;">
+                        <div>
+                            <label for="{{ form.end_date.id_for_label }}" style="font-size: 0.875rem; font-weight: normal; margin-bottom: 0.25rem; display: block;">Date</label>
+                            {{ form.end_date }}
+                            {% if form.end_date.errors %}
+                                <div class="error-message">{{ form.end_date.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <label for="{{ form.end_time_hour.id_for_label }}" style="font-size: 0.875rem; font-weight: normal; margin-bottom: 0.25rem; display: block;">Hour</label>
+                            {{ form.end_time_hour }}
+                            {% if form.end_time_hour.errors %}
+                                <div class="error-message">{{ form.end_time_hour.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <label for="{{ form.end_time_minute.id_for_label }}" style="font-size: 0.875rem; font-weight: normal; margin-bottom: 0.25rem; display: block;">Minute</label>
+                            {{ form.end_time_minute }}
+                            {% if form.end_time_minute.errors %}
+                                <div class="error-message">{{ form.end_time_minute.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <label for="{{ form.end_time_period.id_for_label }}" style="font-size: 0.875rem; font-weight: normal; margin-bottom: 0.25rem; display: block;">AM/PM</label>
+                            {{ form.end_time_period }}
+                            {% if form.end_time_period.errors %}
+                                <div class="error-message">{{ form.end_time_period.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="form-group">
@@ -365,22 +390,5 @@
             }
         }
     });
-    
-    // set min datetime to 1 hour from now
-    const endTimeInput = document.getElementById('{{ form.end_time.id_for_label }}');
-    if (endTimeInput) {
-        const now = new Date();
-        now.setHours(now.getHours() + 1);
-        
-        // format: YYYY-MM-DDTHH:MM
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const day = String(now.getDate()).padStart(2, '0');
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        
-        const minDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
-        endTimeInput.min = minDateTime;
-    }
 </script>
 {% endblock %}

@@ -50,11 +50,54 @@ class AuctionForm(forms.ModelForm):
         widget=forms.Select(attrs={'class': 'form-select'}),
         required=True
     )
+    
+    # Add separate date and time fields for better UX
+    end_date = forms.DateField(
+        widget=forms.DateInput(attrs={
+            'class': 'form-input',
+            'type': 'date'
+        }),
+        required=True,
+        label='End Date'
+    )
+    
+    end_time_hour = forms.IntegerField(
+        min_value=0,
+        max_value=12,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-input',
+            'placeholder': '12',
+            'min': '0',
+            'max': '12'
+        }),
+        required=True,
+        label='Hour'
+    )
+    
+    end_time_minute = forms.IntegerField(
+        min_value=0,
+        max_value=59,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-input',
+            'placeholder': '00',
+            'min': '0',
+            'max': '59'
+        }),
+        required=True,
+        label='Minute'
+    )
+    
+    end_time_period = forms.ChoiceField(
+        choices=[('AM', 'AM'), ('PM', 'PM')],
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        required=True,
+        label='AM/PM'
+    )
 
     class Meta:
         model = Auction
         fields = ['title', 'description', 'category', 'condition', 'starting_price', 
-                  'minimum_bid_increment', 'buy_now_price', 'end_time', 
+                  'minimum_bid_increment', 'buy_now_price', 
                   'location', 'shipping_method', 'shipping_cost']
         widgets = {
             'title': forms.TextInput(attrs={
@@ -83,10 +126,6 @@ class AuctionForm(forms.ModelForm):
                 'placeholder': 'Optional',
                 'step': '0.01',
                 'required': False
-            }),
-            'end_time': forms.DateTimeInput(attrs={
-                'class': 'form-input',
-                'type': 'datetime-local'
             }),
             'shipping_method': forms.RadioSelect(),
             'shipping_cost': forms.NumberInput(attrs={
