@@ -246,42 +246,42 @@
             </p>
         </div>
         
-      <!-- Action Buttons -->
-<div class="action-buttons">
-    {% if user.is_authenticated %}
-        {% if auction.seller == user %}
-            <p style="color: #666; font-style: italic;">This is your listing</p>
-        {% elif auction.status == 'active' and auction.time_remaining != 'Ended' %}
-            <!-- Active auction show bid buttons -->
-            <button class="btn-primary-large" onclick="alert('Bidding functionality coming soon!')">
-                Place Bid
-            </button>
-            {% if auction.buy_now_price %}
-            <button class="btn-secondary-large" onclick="alert('Buy Now functionality coming soon!')">
-                Buy Now for {{ auction.buy_now_price }} BHD
-            </button>
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            {% if user.is_authenticated %}
+                {% if auction.seller == user %}
+                    <p style="color: #666; font-style: italic;">This is your listing</p>
+                {% elif auction.status == 'active' and auction.time_remaining != 'Ended' %}
+                    <!-- Active auction show bid buttons -->
+                    <button class="btn-primary-large" onclick="alert('Bidding functionality coming soon!')">
+                        Place Bid
+                    </button>
+                    {% if auction.buy_now_price %}
+                    <button class="btn-secondary-large" onclick="alert('Buy Now functionality coming soon!')">
+                        Buy Now for {{ auction.buy_now_price }} BHD
+                    </button>
+                    {% endif %}
+                    <button class="btn-secondary-large" onclick="alert('Watchlist functionality coming soon!')">
+                        Add to Watchlist
+                    </button>
+                {% else %}
+                    <!-- Ended auction -->
+                    <div style="padding: 1rem; background-color: #f0f0f0; border-radius: 8px; text-align: center;">
+                        <p style="color: #999; font-weight: 600; margin: 0;">This auction has ended</p>
+                    </div>
+                {% endif %}
+            {% else %}
+                {% if auction.status == 'active' and auction.time_remaining != 'Ended' %}
+                    <a href="{% url 'login' %}?next={{ request.path }}" class="btn-primary-large" style="text-decoration: none; text-align: center;">
+                        Login to Bid
+                    </a>
+                {% else %}
+                    <div style="padding: 1rem; background-color: #f0f0f0; border-radius: 8px; text-align: center;">
+                        <p style="color: #999; font-weight: 600; margin: 0;">This auction has ended</p>
+                    </div>
+                {% endif %}
             {% endif %}
-            <button class="btn-secondary-large" onclick="alert('Watchlist functionality coming soon!')">
-                Add to Watchlist
-            </button>
-        {% else %}
-            <!-- Ended auction -->
-            <div style="padding: 1rem; background-color: #f0f0f0; border-radius: 8px; text-align: center;">
-                <p style="color: #999; font-weight: 600; margin: 0;">This auction has ended</p>
-            </div>
-        {% endif %}
-    {% else %}
-        {% if auction.status == 'active' and auction.time_remaining != 'Ended' %}
-            <a href="{% url 'login' %}?next={{ request.path }}" class="btn-primary-large" style="text-decoration: none; text-align: center;">
-                Login to Bid
-            </a>
-        {% else %}
-            <div style="padding: 1rem; background-color: #f0f0f0; border-radius: 8px; text-align: center;">
-                <p style="color: #999; font-weight: 600; margin: 0;">This auction has ended</p>
-            </div>
-        {% endif %}
-    {% endif %}
-</div>
+        </div>
         
         <!-- Auction Details -->
         <div class="info-grid">
@@ -348,6 +348,16 @@
         if (diff <= 0) {
             countdownElement.textContent = 'Auction Ended';
             countdownElement.style.color = '#999';
+            
+            // Hide bid buttons and show "Auction Ended" message
+            const actionButtons = document.querySelector('.action-buttons');
+            if (actionButtons) {
+                actionButtons.innerHTML = `
+                    <div style="padding: 1rem; background-color: #f0f0f0; border-radius: 8px; text-align: center;">
+                        <p style="color: #999; font-weight: 600; margin: 0;">This auction has ended</p>
+                    </div>
+                `;
+            }
             return;
         }
         
