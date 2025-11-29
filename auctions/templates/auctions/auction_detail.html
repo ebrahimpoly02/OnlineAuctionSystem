@@ -1,0 +1,353 @@
+{% extends 'auctions/base.html' %}
+{% load static %}
+
+{% block title %}{{ auction.title }} - Bidfinity{% endblock %}
+
+{% block content %}
+<style>
+    .detail-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 3rem;
+        background: white;
+        padding: 2rem;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .image-section {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .main-image {
+        width: 100%;
+        height: 400px;
+        background-color: #f0f0f0;
+        border-radius: 8px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .main-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+    
+    .thumbnail-gallery {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 0.5rem;
+    }
+    
+    .thumbnail {
+        width: 100%;
+        aspect-ratio: 1;
+        background-color: #f0f0f0;
+        border-radius: 5px;
+        overflow: hidden;
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: border 0.2s;
+    }
+    
+    .thumbnail:hover {
+        border-color: #1a2332;
+    }
+    
+    .thumbnail.active {
+        border-color: #1a2332;
+    }
+    
+    .thumbnail img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .info-section {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    
+    .auction-title {
+        font-size: 1.8rem;
+        font-weight: 600;
+        color: #1a2332;
+        margin: 0;
+    }
+    
+    .price-section {
+        background-color: #f9f9f9;
+        padding: 1.5rem;
+        border-radius: 8px;
+    }
+    
+    .current-price {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #1a2332;
+        margin: 0;
+    }
+    
+    .bid-info {
+        color: #666;
+        margin-top: 0.5rem;
+    }
+    
+    .time-remaining {
+        font-size: 1.1rem;
+        color: #dc3545;
+        font-weight: bold;
+        margin-top: 0.5rem;
+    }
+    
+    .action-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        margin-top: 1rem;
+    }
+    
+    .btn-primary-large {
+        padding: 1rem;
+        font-size: 1.1rem;
+        background-color: #1a2332;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    
+    .btn-primary-large:hover {
+        background-color: #2d3e50;
+    }
+    
+    .btn-secondary-large {
+        padding: 1rem;
+        font-size: 1.1rem;
+        background-color: white;
+        color: #1a2332;
+        border: 2px solid #1a2332;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .btn-secondary-large:hover {
+        background-color: #1a2332;
+        color: white;
+    }
+    
+    .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        padding: 1rem;
+        background-color: #f9f9f9;
+        border-radius: 8px;
+    }
+    
+    .info-item {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .info-label {
+        font-size: 0.875rem;
+        color: #666;
+        margin-bottom: 0.25rem;
+    }
+    
+    .info-value {
+        font-size: 1rem;
+        color: #1a2332;
+        font-weight: 500;
+    }
+    
+    .description-section {
+        margin-top: 1rem;
+    }
+    
+    .description-section h3 {
+        font-size: 1.2rem;
+        margin-bottom: 0.5rem;
+        color: #1a2332;
+    }
+    
+    .description-text {
+        color: #444;
+        line-height: 1.6;
+        white-space: pre-wrap;
+    }
+    
+    .seller-section {
+        padding: 1rem;
+        background-color: #f9f9f9;
+        border-radius: 8px;
+    }
+    
+    .seller-section h3 {
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+        color: #1a2332;
+    }
+</style>
+
+<div class="detail-container">
+    <!-- Left Side: Images -->
+    <div class="image-section">
+        <div class="main-image" id="mainImageDisplay">
+            {% if images %}
+                <img src="{{ images.0.image.url }}" alt="{{ auction.title }}" id="mainImg">
+            {% else %}
+                <div style="color: #999;">No image available</div>
+            {% endif %}
+        </div>
+        
+        {% if images.count > 1 %}
+        <div class="thumbnail-gallery">
+            {% for image in images %}
+            <div class="thumbnail {% if forloop.first %}active{% endif %}" onclick="changeImage('{{ image.image.url }}', this)">
+                <img src="{{ image.image.url }}" alt="Thumbnail {{ forloop.counter }}">
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Right Side: Information -->
+    <div class="info-section">
+        <h1 class="auction-title">{{ auction.title }}</h1>
+        
+        <!-- Price Section -->
+        <div class="price-section">
+            <p class="current-price">{{ auction.current_price }} BHD</p>
+            <p class="bid-info">{{ bid_count }} bid{% if bid_count != 1 %}s{% endif %}</p>
+            <p class="time-remaining" data-end-time="{{ auction.end_time|date:'c' }}" id="countdown">
+                Time remaining: {{ auction.time_remaining }}
+            </p>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            {% if user.is_authenticated %}
+                {% if auction.status == 'active' and auction.seller != user %}
+                    <button class="btn-primary-large" onclick="alert('Bidding functionality coming soon!')">
+                        Place Bid
+                    </button>
+                    {% if auction.buy_now_price %}
+                    <button class="btn-secondary-large" onclick="alert('Buy Now functionality coming soon!')">
+                        Buy Now for {{ auction.buy_now_price }} BHD
+                    </button>
+                    {% endif %}
+                    <button class="btn-secondary-large" onclick="alert('Watchlist functionality coming soon!')">
+                        Add to Watchlist
+                    </button>
+                {% elif auction.seller == user %}
+                    <p style="color: #666; font-style: italic;">This is your listing</p>
+                {% endif %}
+            {% else %}
+                <a href="{% url 'login' %}?next={{ request.path }}" class="btn-primary-large" style="text-decoration: none; text-align: center;">
+                    Login to Bid
+                </a>
+            {% endif %}
+        </div>
+        
+        <!-- Auction Details -->
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-label">Condition</span>
+                <span class="info-value">{{ auction.condition }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Location</span>
+                <span class="info-value">{{ auction.location }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Shipping</span>
+                <span class="info-value">
+                    {% if auction.shipping_method == 'pickup' %}
+                        Pickup Only
+                    {% else %}
+                        Shipping Available ({{ auction.shipping_cost }} BHD)
+                    {% endif %}
+                </span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Category</span>
+                <span class="info-value">{{ auction.category.name|default:"Uncategorized" }}</span>
+            </div>
+        </div>
+        
+        <!-- Description -->
+        <div class="description-section">
+            <h3>Description</h3>
+            <p class="description-text">{{ auction.description|default:"No description provided." }}</p>
+        </div>
+        
+        <!-- Seller Info -->
+        <div class="seller-section">
+            <h3>Seller Information</h3>
+            <p><strong>Seller:</strong> {{ auction.seller.username }}</p>
+            <p><strong>Member since:</strong> {{ auction.seller.date_joined|date:"F Y" }}</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Image gallery functionality
+    function changeImage(imageUrl, thumbnailElement) {
+        document.getElementById('mainImg').src = imageUrl;
+        
+        // Update active thumbnail
+        document.querySelectorAll('.thumbnail').forEach(thumb => {
+            thumb.classList.remove('active');
+        });
+        thumbnailElement.classList.add('active');
+    }
+    
+    // Real-time countdown timer
+    function updateCountdown() {
+        const countdownElement = document.getElementById('countdown');
+        if (!countdownElement) return;
+        
+        const endTime = new Date(countdownElement.getAttribute('data-end-time'));
+        const now = new Date();
+        const diff = endTime - now;
+        
+        if (diff <= 0) {
+            countdownElement.textContent = 'Auction Ended';
+            countdownElement.style.color = '#999';
+            return;
+        }
+        
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        
+        let timeString = 'Time remaining: ';
+        if (days > 0) {
+            timeString += `${days}d ${hours}h ${minutes}m`;
+        } else if (hours > 0) {
+            timeString += `${hours}h ${minutes}m ${seconds}s`;
+        } else {
+            timeString += `${minutes}m ${seconds}s`;
+            countdownElement.style.color = '#dc3545';
+        }
+        
+        countdownElement.textContent = timeString;
+    }
+    
+    // Update immediately and every second
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+</script>
+{% endblock %}

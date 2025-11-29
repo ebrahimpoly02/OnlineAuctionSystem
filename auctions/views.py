@@ -182,3 +182,44 @@ def create_auction(request):
         form = AuctionForm()
     
     return render(request, 'auctions/create_auction.html', {'form': form})
+
+def auction_detail(request, auction_id):
+    """Display detailed information about a specific auction"""
+    try:
+        auction = Auction.objects.get(id=auction_id)
+    except Auction.DoesNotExist:
+        messages.error(request, 'Auction not found.')
+        return redirect('index')
+    
+    # Get all images for this auction
+    images = auction.images.all().order_by('-is_primary', 'uploaded_at')
+    
+    # Calculate time remaining
+    now = timezone.now()
+    if auction.end_time > now:
+        time_diff = auction.end_time - now
+        days = time_diff.days
+        hours = time_diff.seconds // 3600
+        minutes = (time_diff.seconds % 3600) // 60
+        
+        if days > 0:
+            auction.time_remaining = f"{days} days {hours} hours"
+        elif hours > 0:
+            auction.time_remaining = f"{hours} hours {minutes} minutes"
+        else:
+            auction.time_remaining = f"{minutes} minutes"
+    else:
+        auction.time_remaining = "Ended"
+    
+    # Get bid count and highest bid
+    bids = auction.bids.all().order_by('-bid_amount')
+    bid_count = bids.count()
+    highest_bid = bids.first() if bids.exists() else None
+    
+    context = {
+        'auction': auction,
+        'images': images,
+        'bid_count': bid_count,
+        'highest_bid': highest_bid,
+    }
+    return render(request, 'auctions/auction_detail.html', context)
