@@ -283,12 +283,12 @@
             {% endif %}
         </div>
         
-        <!-- Auction Details -->
+        <!-- Auction details -->
         <div class="info-grid">
             <div class="info-item">
                 <span class="info-label">Condition</span>
-                <span class="info-value">{{ auction.condition }}</span>
-            </div>
+        <span class="info-value">{{ auction.get_condition_display }}</span>            
+    </div>
             <div class="info-item">
                 <span class="info-label">Location</span>
                 <span class="info-value">{{ auction.location }}</span>
