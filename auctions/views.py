@@ -487,3 +487,59 @@ def process_buy_now(request, auction_id):
     
     messages.success(request, f'Purchase successful! You bought {auction.title} for {auction.buy_now_price} BHD.')
     return redirect('auction_detail', auction_id=auction_id)
+@login_required
+def account(request):
+    """Display user account page with tabs"""
+    # Get user's bids
+    user_bids = request.user.bids_placed.all().select_related('auction').order_by('-bid_time')
+    
+    # Categorize bids
+    active_bids = []
+    won_auctions = []
+    lost_auctions = []
+    
+    for bid in user_bids:
+        auction = bid.auction
+        
+        # Check if user has highest bid
+        highest_bid = auction.bids.order_by('-bid_amount').first()
+        is_winning = (highest_bid and highest_bid.bidder == request.user)
+        
+        # Check auction status
+        if auction.status == 'active' and auction.end_time > timezone.now():
+            # Active auction
+            bid.status = 'Winning' if is_winning else 'Outbid'
+            bid.status_class = 'winning' if is_winning else 'outbid'
+            active_bids.append(bid)
+        elif auction.end_time <= timezone.now() or auction.status != 'active':
+            # Ended auction
+            if is_winning:
+                bid.status = 'Won'
+                bid.status_class = 'won'
+                won_auctions.append(bid)
+            else:
+                bid.status = 'Lost'
+                bid.status_class = 'lost'
+                lost_auctions.append(bid)
+    
+    # Get user's listings (if seller)
+    my_listings = []
+    if request.user.is_seller:
+        my_listings = Auction.objects.filter(seller=request.user).order_by('-created_at')
+        
+        # Add bid count for each listing
+        for listing in my_listings:
+            listing.bid_count = listing.bids.count()
+    
+    # Get order history (Buy Now purchases + won auctions paid)
+    from .models import Payment
+    order_history = Payment.objects.filter(buyer=request.user, status='completed').order_by('-transaction_date')
+    
+    context = {
+        'active_bids': active_bids,
+        'won_auctions': won_auctions,
+        'lost_auctions': lost_auctions,
+        'my_listings': my_listings,
+        'order_history': order_history,
+    }
+    return render(request, 'auctions/account.html', context)

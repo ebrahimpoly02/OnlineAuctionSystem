@@ -230,15 +230,20 @@
             </form>
         </div>
         
-        <div class="auth-buttons">
-            {% if user.is_authenticated %}
-                <span style="color: white;">Welcome, {{ user.username }}!</span>
-                <a href="{% url 'logout' %}" class="btn-login">Logout</a>
-            {% else %}
-                <a href="{% url 'login' %}" class="btn-login">Login</a>
-                <a href="{% url 'register' %}" class="btn-signup">Sign Up</a>
-            {% endif %}
+      <div class="auth-buttons">
+    {% if user.is_authenticated %}
+        <div class="account-dropdown">
+            <a href="{% url 'account' %}" style="color: white; text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
+                Your Account
+                <span style="font-size: 0.8rem;">▼</span>
+            </a>
         </div>
+        <a href="{% url 'logout' %}" class="btn-login">Logout</a>
+    {% else %}
+        <a href="{% url 'login' %}" class="btn-login">Login</a>
+        <a href="{% url 'register' %}" class="btn-signup">Sign Up</a>
+    {% endif %}
+</div>
     </nav>
     
     <div class="container">
