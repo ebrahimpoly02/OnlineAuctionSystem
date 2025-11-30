@@ -307,7 +307,6 @@ def add_to_watchlist(request, auction_id):
     
     return redirect('auction_detail', auction_id=auction_id)
 
-    
 @login_required
 def remove_from_watchlist(request, auction_id):
     """Remove auction from user's watchlist"""
@@ -327,7 +326,6 @@ def remove_from_watchlist(request, auction_id):
         messages.info(request, 'This auction is not in your watchlist.')
     
     return redirect('auction_detail', auction_id=auction_id)
-
 
 @login_required
 def watchlist(request):
@@ -366,3 +364,126 @@ def watchlist(request):
         'watchlist_count': len(auctions)
     }
     return render(request, 'auctions/watchlist.html', context)
+
+@login_required
+def buy_now(request, auction_id):
+    """Handle Buy Now purchase"""
+    try:
+        auction = Auction.objects.get(id=auction_id)
+    except Auction.DoesNotExist:
+        messages.error(request, 'Auction not found.')
+        return redirect('index')
+    
+    # Validation checks
+    if auction.seller == request.user:
+        messages.error(request, 'You cannot buy your own auction.')
+        return redirect('auction_detail', auction_id=auction_id)
+    
+    if auction.status != 'active':
+        messages.error(request, 'This auction is not active.')
+        return redirect('auction_detail', auction_id=auction_id)
+    
+    if auction.end_time <= timezone.now():
+        messages.error(request, 'This auction has ended.')
+        return redirect('auction_detail', auction_id=auction_id)
+    
+    if not auction.buy_now_price:
+        messages.error(request, 'Buy Now is not available for this auction.')
+        return redirect('auction_detail', auction_id=auction_id)
+    
+    # Get all images for display
+    images = auction.images.all().order_by('-is_primary', 'uploaded_at')
+    
+    context = {
+        'auction': auction,
+        'images': images,
+        'buy_now_price': auction.buy_now_price,
+    }
+    return render(request, 'auctions/buy_now.html', context)
+
+@login_required
+def process_buy_now(request, auction_id):
+    """Process Buy Now payment"""
+    if request.method != 'POST':
+        return redirect('buy_now', auction_id=auction_id)
+    
+    try:
+        auction = Auction.objects.get(id=auction_id)
+    except Auction.DoesNotExist:
+        messages.error(request, 'Auction not found.')
+        return redirect('index')
+    
+    # validation
+    if auction.seller == request.user:
+        messages.error(request, 'You cannot buy your own auction.')
+        return redirect('auction_detail', auction_id=auction_id)
+    
+    if auction.status != 'active':
+        messages.error(request, 'This auction is not active.')
+        return redirect('auction_detail', auction_id=auction_id)
+    
+    # get form data
+    card_number = request.POST.get('card_number', '').replace(' ', '')
+    card_name = request.POST.get('card_name', '')
+    expiry_month = request.POST.get('expiry_month', '')
+    expiry_year = request.POST.get('expiry_year', '')
+    cvv = request.POST.get('cvv', '')
+    billing_address = request.POST.get('billing_address', '')
+    city = request.POST.get('city', '')
+    postal_code = request.POST.get('postal_code', '')
+    
+    # validation
+    errors = []
+    
+    # card number validation must be 16 digits
+    if not card_number.isdigit() or len(card_number) != 16:
+        errors.append('Card number must be 16 digits.')
+    
+    # card name validation
+    if not card_name or len(card_name.strip()) < 3:
+        errors.append('Cardholder name is required.')
+    
+    # expiry validation
+    try:
+        exp_month = int(expiry_month)
+        exp_year = int(expiry_year)
+        current_year = timezone.now().year
+        current_month = timezone.now().month
+        
+        if exp_month < 1 or exp_month > 12:
+            errors.append('Invalid expiry month.')
+        elif exp_year < current_year or (exp_year == current_year and exp_month < current_month):
+            errors.append('Card has expired.')
+    except ValueError:
+        errors.append('Invalid expiry date.')
+    
+    # CVV validation must be 3 digits
+    if not cvv.isdigit() or len(cvv) != 3:
+        errors.append('CVV must be 3 digits.')
+    
+    # billing address validation
+    if not billing_address or not city:
+        errors.append('Billing address and city are required.')
+    
+    if errors:
+        for error in errors:
+            messages.error(request, error)
+        return redirect('buy_now', auction_id=auction_id)
+    
+    # If all validations passed, process payment 
+    from .models import Payment
+    Payment.objects.create(
+        auction=auction,
+        buyer=request.user,
+        seller=auction.seller,
+        amount=auction.buy_now_price,
+        payment_method=f"Card ending in {card_number[-4:]}",
+        status='completed'
+    )
+    
+    # update auction status
+    auction.status = 'sold'
+    auction.save()
+    
+    messages.success(request, f'Purchase successful! You bought {auction.title} for {auction.buy_now_price} BHD.')
+    return redirect('auction_detail', auction_id=auction_id)

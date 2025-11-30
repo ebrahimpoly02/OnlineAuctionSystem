@@ -297,9 +297,15 @@
         <div class="price-section">
             <p class="current-price">{{ auction.current_price }} BHD</p>
             <p class="bid-info">{{ bid_count }} bid{% if bid_count != 1 %}s{% endif %}</p>
-            <p class="time-remaining" data-end-time="{{ auction.end_time|date:'c' }}" id="countdown">
-                Time remaining: {{ auction.time_remaining }}
-            </p>
+            {% if auction.status == 'sold' %}
+    <p style="color: #4CAF50; font-weight: bold; font-size: 1.1rem;">
+         Sold
+    </p>
+{% else %}
+    <p class="time-remaining" data-end-time="{{ auction.end_time|date:'c' }}" id="countdown">
+        Time remaining: {{ auction.time_remaining }}
+    </p>
+{% endif %}
         </div>
         
         <!-- Action Buttons -->
@@ -334,10 +340,10 @@
     </div>
 </form>
                     {% if auction.buy_now_price %}
-                    <button class="btn-secondary-large" onclick="alert('Buy Now functionality coming soon!')">
-                        Buy Now for {{ auction.buy_now_price }} BHD
-                    </button>
-                    {% endif %}
+    <a href="{% url 'buy_now' auction.id %}" class="btn-secondary-large" style="text-decoration: none; text-align: center;">
+      Buy Now for {{ auction.buy_now_price }} BHD
+</a>
+{% endif %}
                  {% if in_watchlist %}
     <a href="{% url 'remove_from_watchlist' auction.id %}" class="btn-secondary-large" style="text-decoration: none; text-align: center;">
         Remove from Watchlist

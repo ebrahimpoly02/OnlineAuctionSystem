@@ -1,0 +1,337 @@
+{% extends 'auctions/base.html' %}
+{% load static %}
+
+{% block title %}Buy Now - {{ auction.title }} - Bidfinity{% endblock %}
+
+{% block content %}
+<style>
+    .buy-now-container {
+        max-width: 900px;
+        margin: 0 auto;
+        background: white;
+        padding: 2rem;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .product-summary {
+        display: grid;
+        grid-template-columns: 200px 1fr;
+        gap: 2rem;
+        padding: 1.5rem;
+        background-color: #f9f9f9;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+    }
+    
+    .product-image {
+        width: 200px;
+        height: 200px;
+        background-color: #e0e0e0;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    .product-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .product-info h2 {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+        color: #1a2332;
+    }
+    
+    .product-info .price {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #1a2332;
+        margin: 1rem 0;
+    }
+    
+    .payment-form {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+    }
+    
+    .form-section {
+        border-bottom: 1px solid #e0e0e0;
+        padding-bottom: 1.5rem;
+    }
+    
+    .form-section:last-child {
+        border-bottom: none;
+    }
+    
+    .form-section h3 {
+        font-size: 1.2rem;
+        margin-bottom: 1rem;
+        color: #1a2332;
+    }
+    
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    
+    .form-grid.full {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .form-group label {
+        font-size: 0.9rem;
+        color: #666;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+    }
+    
+    .form-group input,
+    .form-group select {
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.3s;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus {
+        outline: none;
+        border-color: #1a2332;
+    }
+    
+    .card-number-input {
+        letter-spacing: 2px;
+        font-family: 'Courier New', monospace;
+    }
+    
+    .expiry-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 0.5rem;
+    }
+    
+    .submit-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 1rem;
+    }
+    
+    .total-amount {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #1a2332;
+    }
+    
+    .btn-submit {
+        padding: 1rem 3rem;
+        font-size: 1.1rem;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    
+    .btn-submit:hover {
+        background-color: #45a049;
+    }
+    
+    .btn-cancel {
+        padding: 1rem 2rem;
+        font-size: 1rem;
+        background-color: #f0f0f0;
+        color: #1a2332;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        transition: background-color 0.3s;
+    }
+    
+    .btn-cancel:hover {
+        background-color: #e0e0e0;
+    }
+    
+  
+</style>
+
+<div class="buy-now-container">
+    <h1 style="font-size: 2rem; margin-bottom: 1.5rem; color: #1a2332;">Complete Your Purchase</h1>
+    
+    <!-- Product Summary -->
+    <div class="product-summary">
+        <div class="product-image">
+            {% if images %}
+                <img src="{{ images.0.image.url }}" alt="{{ auction.title }}">
+            {% else %}
+                <div style="color: #999; display: flex; align-items: center; justify-content: center; height: 100%;">No image</div>
+            {% endif %}
+        </div>
+        <div class="product-info">
+            <h2>{{ auction.title }}</h2>
+            <p style="color: #666; margin-bottom: 0.5rem;">Seller: {{ auction.seller.username }}</p>
+            <p style="color: #666; margin-bottom: 0.5rem;">Condition: {{ auction.get_condition_display }}</p>
+            <p class="price">{{ buy_now_price }} BHD</p>
+        </div>
+    </div>
+    
+  
+    
+    <!-- payment form -->
+    <form method="post" action="{% url 'process_buy_now' auction.id %}" class="payment-form">
+        {% csrf_token %}
+        
+        <!-- card info -->
+        <div class="form-section">
+            <h3>Card Information</h3>
+            <div class="form-grid">
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label for="card_number">Card Number *</label>
+                    <input 
+                        type="text" 
+                        id="card_number" 
+                        name="card_number" 
+                        class="card-number-input"
+                        placeholder="1234 5678 9012 3456"
+                        maxlength="19"
+                        required
+                        oninput="formatCardNumber(this)"
+                    >
+                </div>
+                
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label for="card_name">Cardholder Name *</label>
+                    <input 
+                        type="text" 
+                        id="card_name" 
+                        name="card_name" 
+                        placeholder="JOHN DOE"
+                        required
+                        style="text-transform: uppercase;"
+                    >
+                </div>
+                
+                <div class="form-group">
+                    <label>Expiry Date *</label>
+                    <div class="expiry-grid">
+                        <select name="expiry_month" required>
+                            <option value="">MM</option>
+                            {% for month in "123456789012"|make_list %}
+                                {% if month != '0' %}
+                                <option value="{{ forloop.counter }}">{{ forloop.counter|stringformat:"02d" }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                       <select name="expiry_year" required>
+                         <option value="">YYYY</option>
+                         <option value="2026">2026</option>
+                          <option value="2027">2027</option>
+                         <option value="2028">2028</option>
+                      <option value="2029">2029</option>
+                  <option value="2030">2030</option>
+                  <option value="2031">2031</option>
+                  <option value="2032">2032</option>
+                 <option value="2033">2033</option>
+             <option value="2034">2034</option>
+                  <option value="2035">2035</option>
+</select>
+                        <input 
+                            type="text" 
+                            name="cvv" 
+                            placeholder="CVV"
+                            maxlength="3"
+                            required
+                            oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                        >
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- billing address -->
+        <div class="form-section">
+            <h3>Billing Address</h3>
+            <div class="form-grid full">
+                <div class="form-group">
+                    <label for="billing_address">Street Address *</label>
+                    <input 
+                        type="text" 
+                        id="billing_address" 
+                        name="billing_address" 
+                        placeholder="Building 123, Road 45, Block 678"
+                        required
+                    >
+                </div>
+            </div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="city">City *</label>
+                    <select id="city" name="city" required>
+                        <option value="">Select City</option>
+                        <option value="Manama">Manama</option>
+                        <option value="Muharraq">Muharraq</option>
+                        <option value="Riffa">Riffa</option>
+                        <option value="Hamad Town">Hamad Town</option>
+                        <option value="Isa Town">Isa Town</option>
+                        <option value="Sitra">Sitra</option>
+                        <option value="Budaiya">Budaiya</option>
+                        <option value="Jidhafs">Jidhafs</option>
+                        <option value="Sanabis">Sanabis</option>
+                        <option value="Tubli">Tubli</option>
+                        <option value="Adliya">Adliya</option>
+                        <option value="Seef">Seef</option>
+                        <option value="Juffair">Juffair</option>
+                        <option value="Amwaj Islands">Amwaj Islands</option>
+                        <option value="Durrat Al Bahrain">Durrat Al Bahrain</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="postal_code">Postal Code</label>
+                    <input 
+                        type="text" 
+                        id="postal_code" 
+                        name="postal_code" 
+                        placeholder="000"
+                        maxlength="10"
+                    >
+                </div>
+            </div>
+        </div>
+        
+        <!-- Submit section -->
+        <div class="submit-section">
+            <a href="{% url 'auction_detail' auction.id %}" class="btn-cancel">Cancel</a>
+            <div style="display: flex; align-items: center; gap: 2rem;">
+                <div class="total-amount">Total: {{ buy_now_price }} BHD</div>
+                <button type="submit" class="btn-submit">Complete Purchase</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Format card number with spaces
+    function formatCardNumber(input) {
+        let value = input.value.replace(/\s/g, ''); // Remove existing spaces
+        value = value.replace(/[^0-9]/g, ''); // Remove non-digits
+        value = value.substring(0, 16); // Limit to 16 digits
+        
+        // Add space every 4 digits
+        let formatted = value.match(/.{1,4}/g);
+        input.value = formatted ? formatted.join(' ') : value;
+    }
+</script>
+{% endblock %}
