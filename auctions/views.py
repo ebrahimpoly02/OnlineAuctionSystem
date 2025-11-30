@@ -223,3 +223,58 @@ def auction_detail(request, auction_id):
         'highest_bid': highest_bid,
     }
     return render(request, 'auctions/auction_detail.html', context)
+    
+@login_required
+def place_bid(request, auction_id):
+    """Handle bid placement"""
+    if request.method != 'POST':
+        return redirect('auction_detail', auction_id=auction_id)
+    
+    try:
+        auction = Auction.objects.get(id=auction_id)
+    except Auction.DoesNotExist:
+        messages.error(request, 'Auction not found.')
+        return redirect('index')
+    
+    # Validation checks
+    if auction.seller == request.user:
+        messages.error(request, 'You cannot bid on your own auction.')
+        return redirect('auction_detail', auction_id=auction_id)
+    
+    if auction.status != 'active':
+        messages.error(request, 'This auction is not active.')
+        return redirect('auction_detail', auction_id=auction_id)
+    
+    if auction.end_time <= timezone.now():
+        messages.error(request, 'This auction has ended.')
+        return redirect('auction_detail', auction_id=auction_id)
+    
+    # Get bid amount
+    try:
+        bid_amount = float(request.POST.get('bid_amount', 0))
+    except ValueError:
+        messages.error(request, 'Invalid bid amount.')
+        return redirect('auction_detail', auction_id=auction_id)
+    
+    # Calculate minimum required bid
+    minimum_bid = auction.current_price + auction.minimum_bid_increment
+    
+    # Validate bid amount
+    if bid_amount < minimum_bid:
+        messages.error(request, f'Your bid must be at least {minimum_bid:.2f} BHD (current price + minimum increment).')
+        return redirect('auction_detail', auction_id=auction_id)
+    
+    # Create the bid
+    from .models import Bid
+    Bid.objects.create(
+        auction=auction,
+        bidder=request.user,
+        bid_amount=bid_amount
+    )
+    
+    # Update auction current price
+    auction.current_price = bid_amount
+    auction.save()
+    
+    messages.success(request, f'Your bid of {bid_amount:.2f} BHD has been placed successfully!')
+    return redirect('auction_detail', auction_id=auction_id)

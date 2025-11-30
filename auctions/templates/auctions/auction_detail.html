@@ -253,9 +253,30 @@
                     <p style="color: #666; font-style: italic;">This is your listing</p>
                 {% elif auction.status == 'active' and auction.time_remaining != 'Ended' %}
                     <!-- Active auction show bid buttons -->
-                    <button class="btn-primary-large" onclick="alert('Bidding functionality coming soon!')">
-                        Place Bid
-                    </button>
+                   <!-- Bid Form -->
+<form method="post" action="{% url 'place_bid' auction.id %}" style="display: flex; flex-direction: column; gap: 0.75rem;">
+    {% csrf_token %}
+    <div style="display: flex; gap: 0.5rem; align-items: flex-end;">
+        <div style="flex: 1;">
+            <label for="bid_amount" style="font-size: 0.875rem; color: #666; display: block; margin-bottom: 0.25rem;">
+                Your Bid (minimum: {{ auction.current_price|add:auction.minimum_bid_increment }} BHD)
+            </label>
+            <input 
+                type="number" 
+                name="bid_amount" 
+                id="bid_amount" 
+                step="0.01" 
+                min="{{ auction.current_price|add:auction.minimum_bid_increment }}"
+                placeholder="{{ auction.current_price|add:auction.minimum_bid_increment }}"
+                required
+                style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem;"
+            >
+        </div>
+        <button type="submit" class="btn-primary-large" style="margin: 0; flex-shrink: 0; width: auto; padding: 0.75rem 1.5rem;">
+            Place Bid
+        </button>
+    </div>
+</form>
                     {% if auction.buy_now_price %}
                     <button class="btn-secondary-large" onclick="alert('Buy Now functionality coming soon!')">
                         Buy Now for {{ auction.buy_now_price }} BHD

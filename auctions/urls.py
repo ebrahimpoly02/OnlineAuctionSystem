@@ -8,4 +8,5 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('create/', views.create_auction, name='create_auction'),
     path('auction/<int:auction_id>/', views.auction_detail, name='auction_detail'),
+    path('auction/<int:auction_id>/bid/', views.place_bid, name='place_bid'),
 ]
