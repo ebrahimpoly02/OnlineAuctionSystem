@@ -1,0 +1,414 @@
+{% extends 'auctions/base.html' %}
+{% load static %}
+
+{% block title %}Your Account - Bidfinity{% endblock %}
+
+{% block content %}
+<style>
+    .account-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .account-header {
+        background: white;
+        padding: 2rem;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .account-header h1 {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        color: #1a2332;
+    }
+    
+    .account-header p {
+        color: #666;
+        margin: 0;
+    }
+    
+    .tabs {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 2rem;
+        border-bottom: 2px solid #e0e0e0;
+    }
+    
+    .tab {
+        padding: 1rem 2rem;
+        background: white;
+        border: none;
+        border-bottom: 3px solid transparent;
+        cursor: pointer;
+        font-size: 1rem;
+        color: #666;
+        transition: all 0.3s;
+    }
+    
+    .tab:hover {
+        color: #1a2332;
+        background-color: #f9f9f9;
+    }
+    
+    .tab.active {
+        color: #1a2332;
+        font-weight: 600;
+        border-bottom-color: #1a2332;
+    }
+    
+    .tab-content {
+        display: none;
+    }
+    
+    .tab-content.active {
+        display: block;
+    }
+    
+    .account-section {
+        background: white;
+        padding: 2rem;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .account-section h2 {
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+        color: #1a2332;
+    }
+    
+    .info-grid {
+        display: grid;
+        grid-template-columns: 200px 1fr;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .info-label {
+        font-weight: 600;
+        color: #666;
+    }
+    
+    .info-value {
+        color: #1a2332;
+    }
+    
+    .bid-list, .listing-list, .order-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .bid-item, .listing-item, .order-item {
+        display: grid;
+        grid-template-columns: 100px 1fr auto;
+        gap: 1.5rem;
+        padding: 1rem;
+        background: #f9f9f9;
+        border-radius: 8px;
+        align-items: center;
+    }
+    
+    .item-image {
+        width: 100px;
+        height: 100px;
+        background-color: #e0e0e0;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    .item-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .item-info h3 {
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+        color: #1a2332;
+    }
+    
+    .item-info p {
+        margin: 0.25rem 0;
+        color: #666;
+        font-size: 0.9rem;
+    }
+    
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        white-space: nowrap;
+    }
+    
+    .status-badge.winning {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+    }
+    
+    .status-badge.outbid {
+        background-color: #ffebee;
+        color: #c62828;
+    }
+    
+    .status-badge.won {
+        background-color: #e3f2fd;
+        color: #1565c0;
+    }
+    
+    .status-badge.lost {
+        background-color: #f5f5f5;
+        color: #757575;
+    }
+    
+    .btn-pay {
+        padding: 0.75rem 1.5rem;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 0.95rem;
+    }
+    
+    .btn-pay:hover {
+        background-color: #45a049;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #999;
+    }
+    
+    .empty-state-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+</style>
+
+<div class="account-container">
+    <!-- Account header -->
+    <div class="account-header">
+        <h1>Your Account</h1>
+        <p>Welcome back, {{ user.username }}! Member since {{ user.date_joined|date:"F Y" }}</p>
+    </div>
+    
+    <!-- Tabs -->
+    <div class="tabs">
+        <button class="tab active" onclick="openTab(event, 'account-details')">Account Details</button>
+        <button class="tab" onclick="openTab(event, 'my-bids')">My Bids</button>
+        {% if user.is_seller %}
+        <button class="tab" onclick="openTab(event, 'my-listings')">My Listings</button>
+        {% endif %}
+        <button class="tab" onclick="openTab(event, 'watchlist-tab')">Watchlist</button>
+        <button class="tab" onclick="openTab(event, 'order-history')">Order History</button>
+    </div>
+    
+    <!-- Account details tab -->
+    <div id="account-details" class="tab-content active">
+        <div class="account-section">
+            <h2>Account Details</h2>
+            <div class="info-grid">
+                <div class="info-label">Username:</div>
+                <div class="info-value">{{ user.username }}</div>
+                
+                <div class="info-label">Email:</div>
+                <div class="info-value">{{ user.email }}</div>
+                
+                <div class="info-label">Account Type:</div>
+                <div class="info-value">{{ user.is_seller|yesno:"Seller,Buyer" }}</div>
+                
+                <div class="info-label">Member Since:</div>
+                <div class="info-value">{{ user.date_joined|date:"F d, Y" }}</div>
+            </div>
+            <p style="color: #666; margin-top: 2rem; font-style: italic;">
+                Edit functionality coming soon!
+            </p>
+        </div>
+    </div>
+    
+    <!-- My bids tab -->
+    <div id="my-bids" class="tab-content">
+        <div class="account-section">
+            <h2>My Bids</h2>
+            
+            {% if active_bids or won_auctions or lost_auctions %}
+                {% if active_bids %}
+                <h3 style="margin-top: 1.5rem; margin-bottom: 1rem; color: #1a2332;">Active Bids</h3>
+                <div class="bid-list">
+                    {% for bid in active_bids %}
+                    <div class="bid-item">
+                        <div class="item-image">
+                            {% if bid.auction.images.exists %}
+                            <img src="{{ bid.auction.images.first.image.url }}" alt="{{ bid.auction.title }}">
+                            {% endif %}
+                        </div>
+                        <div class="item-info">
+                            <h3><a href="{% url 'auction_detail' bid.auction.id %}" style="color: #1a2332; text-decoration: none;">{{ bid.auction.title }}</a></h3>
+                            <p>Your bid: <strong>{{ bid.bid_amount }} BHD</strong></p>
+                            <p>Current price: {{ bid.auction.current_price }} BHD</p>
+                        </div>
+                        <span class="status-badge {{ bid.status_class }}">{{ bid.status }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                {% if won_auctions %}
+                <h3 style="margin-top: 2rem; margin-bottom: 1rem; color: #1a2332;">Won Auctions</h3>
+                <div class="bid-list">
+                    {% for bid in won_auctions %}
+                    <div class="bid-item">
+                        <div class="item-image">
+                            {% if bid.auction.images.exists %}
+                            <img src="{{ bid.auction.images.first.image.url }}" alt="{{ bid.auction.title }}">
+                            {% endif %}
+                        </div>
+                        <div class="item-info">
+                            <h3><a href="{% url 'auction_detail' bid.auction.id %}" style="color: #1a2332; text-decoration: none;">{{ bid.auction.title }}</a></h3>
+                            <p>Winning bid: <strong>{{ bid.bid_amount }} BHD</strong></p>
+                            <p style="color: #4CAF50; font-weight: 600;"> You won this auction!</p>
+                        </div>
+                        <a href="{% url 'buy_now' bid.auction.id %}" class="btn-pay">Pay Now</a>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                {% if lost_auctions %}
+                <h3 style="margin-top: 2rem; margin-bottom: 1rem; color: #1a2332;">Past Bids</h3>
+                <div class="bid-list">
+                    {% for bid in lost_auctions %}
+                    <div class="bid-item">
+                        <div class="item-image">
+                            {% if bid.auction.images.exists %}
+                            <img src="{{ bid.auction.images.first.image.url }}" alt="{{ bid.auction.title }}">
+                            {% endif %}
+                        </div>
+                        <div class="item-info">
+                            <h3><a href="{% url 'auction_detail' bid.auction.id %}" style="color: #1a2332; text-decoration: none;">{{ bid.auction.title }}</a></h3>
+                            <p>Your bid: {{ bid.bid_amount }} BHD</p>
+                            <p>Final price: {{ bid.auction.current_price }} BHD</p>
+                        </div>
+                        <span class="status-badge {{ bid.status_class }}">{{ bid.status }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">📋</div>
+                    <h3>No bids yet</h3>
+                    <p>Start bidding on auctions to see them here!</p>
+                    <a href="{% url 'index' %}" class="btn">Browse Auctions</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- My listings tab (sellers only) -->
+    {% if user.is_seller %}
+    <div id="my-listings" class="tab-content">
+        <div class="account-section">
+            <h2>My Listings</h2>
+            
+            {% if my_listings %}
+                <div class="listing-list">
+                    {% for listing in my_listings %}
+                    <div class="listing-item">
+                        <div class="item-image">
+                            {% if listing.images.exists %}
+                            <img src="{{ listing.images.first.image.url }}" alt="{{ listing.title }}">
+                            {% endif %}
+                        </div>
+                        <div class="item-info">
+                            <h3><a href="{% url 'auction_detail' listing.id %}" style="color: #1a2332; text-decoration: none;">{{ listing.title }}</a></h3>
+                            <p>Current price: <strong>{{ listing.current_price }} BHD</strong></p>
+                            <p>Bids: {{ listing.bid_count }} | Status: {{ listing.get_status_display }}</p>
+                        </div>
+                        <span class="status-badge">{{ listing.get_status_display }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">📦</div>
+                    <h3>No listings yet</h3>
+                    <p>Create your first auction to see it here!</p>
+                    <a href="{% url 'create_auction' %}" class="btn">Create Auction</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Watchlist tab -->
+    <div id="watchlist-tab" class="tab-content">
+        <div class="account-section">
+            <h2>Watchlist</h2>
+            <p style="color: #666;">View your saved auctions on the <a href="{% url 'watchlist' %}" style="color: #1a2332;">Watchlist page</a>.</p>
+        </div>
+    </div>
+    
+    <!-- Order history tab -->
+    <div id="order-history" class="tab-content">
+        <div class="account-section">
+            <h2>Order History</h2>
+            
+            {% if order_history %}
+                <div class="order-list">
+                    {% for order in order_history %}
+                    <div class="order-item">
+                        <div class="item-image">
+                            {% if order.auction.images.exists %}
+                            <img src="{{ order.auction.images.first.image.url }}" alt="{{ order.auction.title }}">
+                            {% endif %}
+                        </div>
+                        <div class="item-info">
+                            <h3><a href="{% url 'auction_detail' order.auction.id %}" style="color: #1a2332; text-decoration: none;">{{ order.auction.title }}</a></h3>
+                            <p>Amount paid: <strong>{{ order.amount }} BHD</strong></p>
+                            <p>Seller: {{ order.seller.username }}</p>
+                            <p>Date: {{ order.transaction_date|date:"M d, Y" }}</p>
+                        </div>
+                        <span class="status-badge winning">Paid</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">🛍️</div>
+                    <h3>No orders yet</h3>
+                    <p>Your purchase history will appear here!</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    function openTab(evt, tabName) {
+        // Hide all tab contents
+        var tabContents = document.getElementsByClassName("tab-content");
+        for (var i = 0; i < tabContents.length; i++) {
+            tabContents[i].classList.remove("active");
+        }
+        
+        // Remove active class from all tabs
+        var tabs = document.getElementsByClassName("tab");
+        for (var i = 0; i < tabs.length; i++) {
+            tabs[i].classList.remove("active");
+        }
+        
+        // Show the current tab and mark button as active
+        document.getElementById(tabName).classList.add("active");
+        evt.currentTarget.classList.add("active");
+    }
+</script>
+{% endblock %}
