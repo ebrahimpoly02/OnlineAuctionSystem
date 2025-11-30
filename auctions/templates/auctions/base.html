@@ -158,6 +158,12 @@
             border: 1px solid #f5c6cb;
         }
         
+        .message.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
         /* Primary Button */
         .btn {
             display: inline-block;
@@ -193,7 +199,10 @@
             transition: transform 0.2s, box-shadow 0.2s;
         }
         
-      
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
     </style>
 </head>
 <body>
@@ -209,7 +218,9 @@
             {% if user.is_authenticated and user.is_seller %}
                 <a href="{% url 'create_auction' %}">Sell</a>
             {% endif %}
-            <a href="#">Watchlist</a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'watchlist' %}">Watchlist</a>
+            {% endif %}
         </div>
         
         <div class="search-container">

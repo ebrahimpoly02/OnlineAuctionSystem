@@ -1,0 +1,104 @@
+{% extends 'auctions/base.html' %}
+{% load static %}
+
+{% block title %}My Watchlist - Bidfinity{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2rem;">
+    <h1 style="font-size: 2rem; margin-bottom: 0.5rem;">My Watchlist</h1>
+    <p style="color: #666;">You have {{ watchlist_count }} item{% if watchlist_count != 1 %}s{% endif %} in your watchlist</p>
+</div>
+
+{% if auctions %}
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
+    {% for auction in auctions %}
+    <a href="{% url 'auction_detail' auction.id %}" style="text-decoration: none; color: inherit;">
+        <div class="card">
+            <!-- auction image -->
+            <div style="width: 100%; height: 200px; background-color: #e0e0e0; border-radius: 8px; margin-bottom: 1rem; overflow: hidden;">
+                {% if auction.images.exists %}
+                    {% with auction.images.first as primary_image %}
+                    <img src="{{ primary_image.image.url }}" alt="{{ auction.title }}" style="width: 100%; height: 100%; object-fit: cover;">
+                    {% endwith %}
+                {% endif %}
+            </div>
+            
+            <!-- auction info -->
+            <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem;">{{ auction.title }}</h3>
+            <p style="color: #666; font-size: 0.9rem; margin-bottom: 0.5rem; word-wrap: break-word; overflow-wrap: break-word;">
+                {{ auction.description|truncatewords:10 }}
+            </p>
+            <p style="font-weight: bold; font-size: 1.1rem; color: #1a2332; margin: 0.5rem 0;">
+                Current Bid: {{ auction.current_price }} BHD
+            </p>
+            <p style="color: #666; font-size: 0.9rem;">
+                Ends in: <span class="time-remaining" data-end-time="{{ auction.end_time|date:'c' }}">
+                    {{ auction.time_remaining }}
+                </span>
+            </p>
+            <p style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;">
+                Number of bids: {{ auction.bid_count }}
+            </p>
+            <p style="color: #888; font-size: 0.85rem;">
+                Seller: {{ auction.seller.username }}
+            </p>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<div style="text-align: center; padding: 4rem 2rem; background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+    <div style="font-size: 3rem; margin-bottom: 1rem;">📋</div>
+    <h2 style="color: #1a2332; margin-bottom: 0.5rem;">Your watchlist is empty</h2>
+    <p style="color: #666; margin-bottom: 1.5rem;">Start adding auctions you're interested in to keep track of them!</p>
+    <a href="{% url 'index' %}" class="btn">Browse Auctions</a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function updateTimers() {
+    const timers = document.querySelectorAll('.time-remaining');
+    
+    timers.forEach(timer => {
+        const endTime = new Date(timer.getAttribute('data-end-time'));
+        const now = new Date();
+        const diff = endTime - now;
+        
+        if (diff <= 0) {
+            timer.textContent = 'Ended';
+            timer.style.color = '#999';
+            return;
+        }
+        
+        // Calculate time
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        
+        // format display
+        let timeString = '';
+        if (days > 0) {
+            timeString = `${days} days ${hours} hours`;
+        } else if (hours > 0) {
+            timeString = `${hours} hours ${minutes} minutes`;
+        } else {
+            timeString = `${minutes} minutes ${seconds} seconds`;
+            // make it red if less than 1 hour
+            timer.style.color = '#dc3545';
+            timer.style.fontWeight = 'bold';
+        }
+        
+        timer.textContent = timeString;
+    });
+}
+
+// update immediately
+updateTimers();
+
+// update every second
+setInterval(updateTimers, 1000);
+</script>
+{% endblock %}

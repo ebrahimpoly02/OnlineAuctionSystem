@@ -216,12 +216,19 @@ def auction_detail(request, auction_id):
     bid_count = bids.count()
     highest_bid = bids.first() if bids.exists() else None
     
+    # check if auction is in user's watchlist
+    in_watchlist = False
+    if request.user.is_authenticated:
+        from .models import Watchlist
+        in_watchlist = Watchlist.objects.filter(user=request.user, auction=auction).exists()
+    
     context = {
         'auction': auction,
         'images': images,
         'bid_count': bid_count,
         'highest_bid': highest_bid,
-        'bids': bids,  # added for bid history display
+        'bids': bids,
+        'in_watchlist': in_watchlist,
     }
     return render(request, 'auctions/auction_detail.html', context)
     
@@ -279,3 +286,83 @@ def place_bid(request, auction_id):
     
     messages.success(request, f'Your bid of {bid_amount:.2f} BHD has been placed successfully!')
     return redirect('auction_detail', auction_id=auction_id)
+
+@login_required
+def add_to_watchlist(request, auction_id):
+    """Add auction to user's watchlist"""
+    try:
+        auction = Auction.objects.get(id=auction_id)
+    except Auction.DoesNotExist:
+        messages.error(request, 'Auction not found.')
+        return redirect('index')
+    
+    from .models import Watchlist
+    
+    # Check if already in watchlist
+    if Watchlist.objects.filter(user=request.user, auction=auction).exists():
+        messages.info(request, 'This auction is already in your watchlist.')
+    else:
+        Watchlist.objects.create(user=request.user, auction=auction)
+        messages.success(request, 'Auction added to your watchlist!')
+    
+    return redirect('auction_detail', auction_id=auction_id)
+
+    
+@login_required
+def remove_from_watchlist(request, auction_id):
+    """Remove auction from user's watchlist"""
+    try:
+        auction = Auction.objects.get(id=auction_id)
+    except Auction.DoesNotExist:
+        messages.error(request, 'Auction not found.')
+        return redirect('index')
+    
+    from .models import Watchlist
+    
+    watchlist_item = Watchlist.objects.filter(user=request.user, auction=auction).first()
+    if watchlist_item:
+        watchlist_item.delete()
+        messages.success(request, 'Auction removed from your watchlist.')
+    else:
+        messages.info(request, 'This auction is not in your watchlist.')
+    
+    return redirect('auction_detail', auction_id=auction_id)
+
+
+@login_required
+def watchlist(request):
+    """Display user's watchlist"""
+    from .models import Watchlist
+    
+    watchlist_items = Watchlist.objects.filter(user=request.user).select_related('auction')
+    
+    # add bid count and time remaining for each auction
+    auctions = []
+    for item in watchlist_items:
+        auction = item.auction
+        auction.bid_count = auction.bids.count()
+        
+        # calculate time remaining
+        now = timezone.now()
+        if auction.end_time > now:
+            time_diff = auction.end_time - now
+            days = time_diff.days
+            hours = time_diff.seconds // 3600
+            minutes = (time_diff.seconds % 3600) // 60
+            
+            if days > 0:
+                auction.time_remaining = f"{days} days {hours} hours"
+            elif hours > 0:
+                auction.time_remaining = f"{hours} hours {minutes} minutes"
+            else:
+                auction.time_remaining = f"{minutes} minutes"
+        else:
+            auction.time_remaining = "Ended"
+        
+        auctions.append(auction)
+    
+    context = {
+        'auctions': auctions,
+        'watchlist_count': len(auctions)
+    }
+    return render(request, 'auctions/watchlist.html', context)

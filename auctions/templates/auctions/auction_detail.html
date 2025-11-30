@@ -338,9 +338,15 @@
                         Buy Now for {{ auction.buy_now_price }} BHD
                     </button>
                     {% endif %}
-                    <button class="btn-secondary-large" onclick="alert('Watchlist functionality coming soon!')">
-                        Add to Watchlist
-                    </button>
+                 {% if in_watchlist %}
+    <a href="{% url 'remove_from_watchlist' auction.id %}" class="btn-secondary-large" style="text-decoration: none; text-align: center;">
+        Remove from Watchlist
+    </a>
+{% else %}
+    <a href="{% url 'add_to_watchlist' auction.id %}" class="btn-secondary-large" style="text-decoration: none; text-align: center;">
+        Add to Watchlist
+    </a>
+{% endif %}
                 {% else %}
                     <!-- Ended auction -->
                     <div style="padding: 1rem; background-color: #f0f0f0; border-radius: 8px; text-align: center;">
