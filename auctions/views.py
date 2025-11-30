@@ -191,10 +191,10 @@ def auction_detail(request, auction_id):
         messages.error(request, 'Auction not found.')
         return redirect('index')
     
-    # Get all images for this auction
+    # get all images for this auction
     images = auction.images.all().order_by('-is_primary', 'uploaded_at')
     
-    # Calculate time remaining
+    # calculate time remaining
     now = timezone.now()
     if auction.end_time > now:
         time_diff = auction.end_time - now
@@ -211,8 +211,8 @@ def auction_detail(request, auction_id):
     else:
         auction.time_remaining = "Ended"
     
-    # Get bid count and highest bid
-    bids = auction.bids.all().order_by('-bid_amount')
+    # get all bids ordered by most recent first
+    bids = auction.bids.all().order_by('-bid_time')
     bid_count = bids.count()
     highest_bid = bids.first() if bids.exists() else None
     
@@ -221,6 +221,7 @@ def auction_detail(request, auction_id):
         'images': images,
         'bid_count': bid_count,
         'highest_bid': highest_bid,
+        'bids': bids,  # added for bid history display
     }
     return render(request, 'auctions/auction_detail.html', context)
     
@@ -249,22 +250,22 @@ def place_bid(request, auction_id):
         messages.error(request, 'This auction has ended.')
         return redirect('auction_detail', auction_id=auction_id)
     
-    # Get bid amount
+    # get bid amount
     try:
         bid_amount = float(request.POST.get('bid_amount', 0))
     except ValueError:
         messages.error(request, 'Invalid bid amount.')
         return redirect('auction_detail', auction_id=auction_id)
     
-    # Calculate minimum required bid
+    # calculate minimum required bid
     minimum_bid = auction.current_price + auction.minimum_bid_increment
     
-    # Validate bid amount
+    # validate bid amount
     if bid_amount < minimum_bid:
         messages.error(request, f'Your bid must be at least {minimum_bid:.2f} BHD (current price + minimum increment).')
         return redirect('auction_detail', auction_id=auction_id)
     
-    # Create the bid
+    # create the bid
     from .models import Bid
     Bid.objects.create(
         auction=auction,

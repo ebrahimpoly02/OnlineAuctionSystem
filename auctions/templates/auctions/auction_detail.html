@@ -209,6 +209,62 @@
         margin-bottom: 0.5rem;
         color: #1a2332;
     }
+    
+    .bid-history-section {
+        padding: 1rem;
+        background-color: #f9f9f9;
+        border-radius: 8px;
+        margin-top: 1rem;
+    }
+    
+    .bid-history-section h3 {
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+        color: #1a2332;
+    }
+    
+    .bid-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    
+    .bid-item {
+        padding: 0.75rem;
+        background-color: white;
+        border-radius: 6px;
+        border-left: 3px solid #1a2332;
+    }
+    
+    .bid-item:first-child {
+        border-left-color: #4CAF50;
+        background-color: #f0f9f0;
+    }
+    
+    .bid-info-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.25rem;
+    }
+    
+    .bidder-name {
+        font-weight: 600;
+        color: #1a2332;
+    }
+    
+    .bid-amount {
+        font-weight: bold;
+        color: #1a2332;
+        font-size: 1.1rem;
+    }
+    
+    .bid-time {
+        font-size: 0.85rem;
+        color: #666;
+    }
 </style>
 
 <div class="detail-container">
@@ -304,12 +360,12 @@
             {% endif %}
         </div>
         
-        <!-- Auction details -->
+        <!-- auction details -->
         <div class="info-grid">
             <div class="info-item">
                 <span class="info-label">Condition</span>
-        <span class="info-value">{{ auction.get_condition_display }}</span>            
-    </div>
+                <span class="info-value">{{ auction.get_condition_display }}</span>            
+            </div>
             <div class="info-item">
                 <span class="info-label">Location</span>
                 <span class="info-value">{{ auction.location }}</span>
@@ -330,34 +386,54 @@
             </div>
         </div>
         
-        <!-- Description -->
+        <!-- description -->
         <div class="description-section">
             <h3>Description</h3>
             <p class="description-text">{{ auction.description|default:"No description provided." }}</p>
         </div>
         
-        <!-- Seller Info -->
+        <!-- seller Info -->
         <div class="seller-section">
             <h3>Seller Information</h3>
             <p><strong>Seller:</strong> {{ auction.seller.username }}</p>
             <p><strong>Member since:</strong> {{ auction.seller.date_joined|date:"F Y" }}</p>
         </div>
+        
+        <!-- bid History -->
+        <div class="bid-history-section">
+            <h3>Bid History</h3>
+            {% if bids %}
+                <div class="bid-list">
+                    {% for bid in bids %}
+                    <div class="bid-item">
+                        <div class="bid-info-item">
+                            <span class="bidder-name">{{ bid.bidder.username }}</span>
+                            <span class="bid-amount">{{ bid.bid_amount }} BHD</span>
+                        </div>
+                        <div class="bid-time">{{ bid.bid_time|date:"M d, Y - h:i A" }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p style="color: #666; font-style: italic;">No bids yet. Be the first to bid!</p>
+            {% endif %}
+        </div>
     </div>
 </div>
 
 <script>
-    // Image gallery functionality
+    // image gallery functionality
     function changeImage(imageUrl, thumbnailElement) {
         document.getElementById('mainImg').src = imageUrl;
         
-        // Update active thumbnail
+        // update active thumbnail
         document.querySelectorAll('.thumbnail').forEach(thumb => {
             thumb.classList.remove('active');
         });
         thumbnailElement.classList.add('active');
     }
     
-    // Real-time countdown timer
+    // real-time countdown timer
     function updateCountdown() {
         const countdownElement = document.getElementById('countdown');
         if (!countdownElement) return;
@@ -400,7 +476,7 @@
         countdownElement.textContent = timeString;
     }
     
-    // Update immediately and every second
+    // update immediately and every second
     updateCountdown();
     setInterval(updateCountdown, 1000);
 </script>
