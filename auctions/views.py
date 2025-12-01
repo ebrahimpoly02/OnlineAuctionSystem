@@ -367,7 +367,7 @@ def watchlist(request):
 
 @login_required
 def buy_now(request, auction_id):
-    """Handle Buy Now purchase"""
+    """Handle Buy Now purchase or payment for won auction"""
     try:
         auction = Auction.objects.get(id=auction_id)
     except Auction.DoesNotExist:
@@ -379,31 +379,42 @@ def buy_now(request, auction_id):
         messages.error(request, 'You cannot buy your own auction.')
         return redirect('auction_detail', auction_id=auction_id)
     
-    if auction.status != 'active':
-        messages.error(request, 'This auction is not active.')
-        return redirect('auction_detail', auction_id=auction_id)
+    # Check if this is a Buy Now purchase or payment for won auction
+    is_buy_now = auction.buy_now_price and auction.status == 'active' and auction.end_time > timezone.now()
     
+    # Check if user won the auction
+    is_winner = False
     if auction.end_time <= timezone.now():
-        messages.error(request, 'This auction has ended.')
-        return redirect('auction_detail', auction_id=auction_id)
+        highest_bid = auction.bids.order_by('-bid_amount').first()
+        is_winner = (highest_bid and highest_bid.bidder == request.user)
     
-    if not auction.buy_now_price:
-        messages.error(request, 'Buy Now is not available for this auction.')
+    # Allow payment if it's Buy Now OR if user won the auction
+    if not is_buy_now and not is_winner:
+        if auction.end_time <= timezone.now():
+            messages.error(request, 'This auction has ended and you did not win.')
+        elif not auction.buy_now_price:
+            messages.error(request, 'Buy Now is not available for this auction.')
+        else:
+            messages.error(request, 'This auction is not available for purchase.')
         return redirect('auction_detail', auction_id=auction_id)
     
     # Get all images for display
     images = auction.images.all().order_by('-is_primary', 'uploaded_at')
     
+    # Determine the payment amount
+    payment_amount = auction.buy_now_price if is_buy_now else auction.current_price
+    
     context = {
         'auction': auction,
         'images': images,
-        'buy_now_price': auction.buy_now_price,
+        'buy_now_price': payment_amount,
+        'is_won_auction': is_winner,
     }
     return render(request, 'auctions/buy_now.html', context)
 
 @login_required
 def process_buy_now(request, auction_id):
-    """Process Buy Now payment"""
+    """Process Buy Now payment or payment for won auction"""
     if request.method != 'POST':
         return redirect('buy_now', auction_id=auction_id)
     
@@ -418,8 +429,18 @@ def process_buy_now(request, auction_id):
         messages.error(request, 'You cannot buy your own auction.')
         return redirect('auction_detail', auction_id=auction_id)
     
-    if auction.status != 'active':
-        messages.error(request, 'This auction is not active.')
+    # Check if this is a Buy Now purchase or payment for won auction
+    is_buy_now = auction.buy_now_price and auction.status == 'active' and auction.end_time > timezone.now()
+    
+    # Check if user won the auction
+    is_winner = False
+    if auction.end_time <= timezone.now():
+        highest_bid = auction.bids.order_by('-bid_amount').first()
+        is_winner = (highest_bid and highest_bid.bidder == request.user)
+    
+    # Validate that payment is allowed
+    if not is_buy_now and not is_winner:
+        messages.error(request, 'You are not authorized to pay for this auction.')
         return redirect('auction_detail', auction_id=auction_id)
     
     # get form data
@@ -470,13 +491,16 @@ def process_buy_now(request, auction_id):
             messages.error(request, error)
         return redirect('buy_now', auction_id=auction_id)
     
+    # Determine payment amount
+    payment_amount = auction.buy_now_price if is_buy_now else auction.current_price
+    
     # If all validations passed, process payment 
     from .models import Payment
     Payment.objects.create(
         auction=auction,
         buyer=request.user,
         seller=auction.seller,
-        amount=auction.buy_now_price,
+        amount=payment_amount,
         payment_method=f"Card ending in {card_number[-4:]}",
         status='completed'
     )
@@ -485,7 +509,7 @@ def process_buy_now(request, auction_id):
     auction.status = 'sold'
     auction.save()
     
-    messages.success(request, f'Purchase successful! You bought {auction.title} for {auction.buy_now_price} BHD.')
+    messages.success(request, f'Purchase successful! You bought {auction.title} for {payment_amount} BHD.')
     return redirect('auction_detail', auction_id=auction_id)
 @login_required
 def account(request):
@@ -527,11 +551,19 @@ def account(request):
     if request.user.is_seller:
         my_listings = Auction.objects.filter(seller=request.user).order_by('-created_at')
         
-        # Add bid count for each listing
+        # Add bid count and actual status for each listing
         for listing in my_listings:
             listing.bid_count = listing.bids.count()
+            
+            # Determine actual status based on time
+            if listing.status == 'sold':
+                listing.display_status = 'Sold'
+            elif listing.end_time <= timezone.now():
+                listing.display_status = 'Ended'
+            else:
+                listing.display_status = 'Active'
     
-    # Get order history (Buy Now purchases + won auctions paid)
+    # Get order history (Buy Now purchases and won auctions paid)
     from .models import Payment
     order_history = Payment.objects.filter(buyer=request.user, status='completed').order_by('-transaction_date')
     

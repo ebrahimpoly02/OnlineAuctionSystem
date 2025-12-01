@@ -333,7 +333,7 @@
                             <p>Current price: <strong>{{ listing.current_price }} BHD</strong></p>
                             <p>Bids: {{ listing.bid_count }} | Status: {{ listing.get_status_display }}</p>
                         </div>
-                        <span class="status-badge">{{ listing.get_status_display }}</span>
+                    <span class="status-badge">{{ listing.display_status }}</span>
                     </div>
                     {% endfor %}
                 </div>
