@@ -82,7 +82,8 @@ def register(request):
         password = request.POST['password']
         confirm_password = request.POST['confirm_password']
         is_seller = request.POST.get('is_seller') == 'on'
-        phone = request.POST.get('phone', '').strip()
+        phone_digits = request.POST.get('phone', '').strip()
+        phone = f"973{phone_digits}" if phone_digits else ''
         
         # Validation
         if password != confirm_password:
@@ -626,6 +627,8 @@ def edit_account(request):
         current_password = request.POST.get('current_password', '')
         new_password = request.POST.get('new_password', '')
         confirm_password = request.POST.get('confirm_password', '')
+        phone_digits = request.POST.get('phone', '').strip()
+        phone = f"973{phone_digits}" if phone_digits else ''
         
         errors = []
         
@@ -646,6 +649,9 @@ def edit_account(request):
                 errors.append('Email already registered.')
             else:
                 request.user.email = email
+        
+        # Update phone (optional field, always allow changes)
+        request.user.phone = phone
         
         # Validate password change (if requested)
         if new_password:

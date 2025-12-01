@@ -127,6 +127,13 @@
                 <label for="email">Email</label>
                 <input type="email" id="email" name="email" value="{{ user.email }}" required>
             </div>
+            <div class="form-group">
+    <label for="phone">Phone Number</label>
+    <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <span style="padding: 0.75rem; background: #f0f0f0; border: 1px solid #ddd; border-radius: 8px; font-weight: 600;">973</span>
+        <input type="tel" id="phone" name="phone" value="{% if user.phone and user.phone|length > 3 %}{{ user.phone|slice:'3:' }}{% endif %}" pattern="[0-9]{8}" maxlength="8" placeholder="XXXXXXXX" title="Enter 8-digit phone number" style="flex: 1; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px;" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+    </div>
+</div>
         </div>
         
         <!-- Change Password -->

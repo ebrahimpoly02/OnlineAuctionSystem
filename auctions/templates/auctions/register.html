@@ -21,7 +21,10 @@
 
         <div style="margin-bottom: 1rem;">
 <label style="display: block; margin-bottom: 0.5rem;">Phone Number (optional):</label>
-<input type="tel" name="phone" pattern="[0-9]{8}" title="Enter 8-digit phone number" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+<div style="display: flex; align-items: center; gap: 0.5rem;">
+    <span style="padding: 0.5rem; background: #f0f0f0; border: 1px solid #ddd; border-radius: 5px; font-weight: 600;">973</span>
+    <input type="tel" name="phone" id="phone_input" pattern="[0-9]{8}" maxlength="8" placeholder="XXXXXXXX" title="Enter 8-digit phone number" style="flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+</div>
 </div>
 
         <div style="margin-bottom: 1rem;">
