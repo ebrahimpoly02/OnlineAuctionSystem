@@ -683,3 +683,115 @@ def edit_account(request):
         return redirect('account')
     
     return render(request, 'auctions/edit_account.html')
+
+@login_required
+def edit_listing(request, auction_id):
+    """Edit auction listing (seller only, no bids allowed)"""
+    try:
+        auction = Auction.objects.get(id=auction_id)
+    except Auction.DoesNotExist:
+        messages.error(request, 'Auction not found.')
+        return redirect('account')
+    
+    # Check if user is the seller
+    if auction.seller != request.user:
+        messages.error(request, 'You can only edit your own auctions.')
+        return redirect('account')
+    
+    # Check if auction has bids
+    if auction.bids.exists():
+        messages.error(request, 'Cannot edit auction that has bids.')
+        return redirect('auction_detail', auction_id=auction_id)
+    
+    # Check if auction has ended
+    if auction.end_time <= timezone.now():
+        messages.error(request, 'Cannot edit ended auction.')
+        return redirect('auction_detail', auction_id=auction_id)
+    
+    if request.method == 'POST':
+        # Get form data
+        auction.title = request.POST.get('title', '').strip()
+        auction.description = request.POST.get('description', '').strip()
+        auction.category_id = request.POST.get('category')
+        auction.condition = request.POST.get('condition')
+        auction.location = request.POST.get('location')
+        auction.shipping_method = request.POST.get('shipping_method')
+        
+        # Prices
+        try:
+            auction.starting_price = float(request.POST.get('starting_price', 0))
+            auction.current_price = auction.starting_price  # Reset current price
+            auction.minimum_bid_increment = float(request.POST.get('minimum_bid_increment', 1))
+            
+            buy_now_price = request.POST.get('buy_now_price', '').strip()
+            auction.buy_now_price = float(buy_now_price) if buy_now_price else None
+            
+            if auction.shipping_method == 'shipping':
+                auction.shipping_cost = float(request.POST.get('shipping_cost', 0))
+            else:
+                auction.shipping_cost = None
+        except ValueError:
+            messages.error(request, 'Invalid price values.')
+            return redirect('edit_listing', auction_id=auction_id)
+        
+        # Validation
+        if not auction.title or not auction.description:
+            messages.error(request, 'Title and description are required.')
+            return redirect('edit_listing', auction_id=auction_id)
+        
+        if auction.starting_price <= 0:
+            messages.error(request, 'Starting price must be greater than 0.')
+            return redirect('edit_listing', auction_id=auction_id)
+        
+        # Save auction
+        auction.save()
+        
+        # Handle new images (optional)
+        new_images = request.FILES.getlist('new_images')
+        if new_images:
+            for image in new_images[:5]:  # Limit to 5 images
+                AuctionImage.objects.create(
+                    auction=auction,
+                    image=image,
+                    is_primary=False
+                )
+        
+        messages.success(request, 'Auction updated successfully!')
+        return redirect('auction_detail', auction_id=auction_id)
+    
+    # GET request - show form
+    categories = Category.objects.all()
+    images = auction.images.all()
+    
+    context = {
+        'auction': auction,
+        'categories': categories,
+        'images': images,
+    }
+    return render(request, 'auctions/edit_listing.html', context)
+
+@login_required
+def delete_image(request, image_id):
+    """Delete auction image"""
+    try:
+        image = AuctionImage.objects.get(id=image_id)
+    except AuctionImage.DoesNotExist:
+        messages.error(request, 'Image not found.')
+        return redirect('account')
+    
+    auction = image.auction
+    
+    # Check if user is the seller
+    if auction.seller != request.user:
+        messages.error(request, 'You can only delete images from your own auctions.')
+        return redirect('account')
+    
+    # Check if auction has bids
+    if auction.bids.exists():
+        messages.error(request, 'Cannot delete images from auction that has bids.')
+        return redirect('auction_detail', auction_id=auction.id)
+    
+    # Delete image
+    image.delete()
+    messages.success(request, 'Image deleted successfully.')
+    return redirect('edit_listing', auction_id=auction.id)
