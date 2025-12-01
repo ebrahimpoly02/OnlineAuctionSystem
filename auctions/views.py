@@ -222,6 +222,16 @@ def auction_detail(request, auction_id):
         from .models import Watchlist
         in_watchlist = Watchlist.objects.filter(user=request.user, auction=auction).exists()
     
+    # Check if auction has ended and determine winner
+    auction_ended = auction.end_time <= timezone.now()
+    is_winner = False
+    winner_username = None
+    
+    if auction_ended and highest_bid:
+        winner_username = highest_bid.bidder.username
+        if request.user.is_authenticated:
+            is_winner = (highest_bid.bidder == request.user)
+    
     context = {
         'auction': auction,
         'images': images,
@@ -229,6 +239,9 @@ def auction_detail(request, auction_id):
         'highest_bid': highest_bid,
         'bids': bids,
         'in_watchlist': in_watchlist,
+        'auction_ended': auction_ended,
+        'is_winner': is_winner,
+        'winner_username': winner_username,
     }
     return render(request, 'auctions/auction_detail.html', context)
     
