@@ -276,7 +276,11 @@
                             <p>Winning bid: <strong>{{ bid.bid_amount }} BHD</strong></p>
                             <p style="color: #4CAF50; font-weight: 600;"> You won this auction!</p>
                         </div>
-                        <a href="{% url 'buy_now' bid.auction.id %}" class="btn-pay">Pay Now</a>
+                        {% if bid.already_paid %}
+    <span class="status-badge winning">Paid</span>
+{% else %}
+    <a href="{% url 'buy_now' bid.auction.id %}" class="btn-pay">Pay Now</a>
+{% endif %}
                     </div>
                     {% endfor %}
                 </div>

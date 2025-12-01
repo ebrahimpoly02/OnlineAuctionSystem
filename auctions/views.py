@@ -494,8 +494,19 @@ def process_buy_now(request, auction_id):
     # Determine payment amount
     payment_amount = auction.buy_now_price if is_buy_now else auction.current_price
     
-    # If all validations passed, process payment 
+    # Check if already paid
     from .models import Payment
+    already_paid = Payment.objects.filter(
+        auction=auction,
+        buyer=request.user,
+        status='completed'
+    ).exists()
+    
+    if already_paid:
+        messages.error(request, 'You have already paid for this auction.')
+        return redirect('auction_detail', auction_id=auction_id)
+    
+    # If all validations passed, process payment 
     Payment.objects.create(
         auction=auction,
         buyer=request.user,
@@ -538,8 +549,24 @@ def account(request):
         elif auction.end_time <= timezone.now() or auction.status != 'active':
             # Ended auction
             if is_winning:
-                bid.status = 'Won'
-                bid.status_class = 'won'
+                # Check if user already paid for this auction
+                from .models import Payment
+                already_paid = Payment.objects.filter(
+                    auction=auction,
+                    buyer=request.user,
+                    status='completed'
+                ).exists()
+                
+                # Show in Won Auctions regardless of payment status
+                if already_paid:
+                    bid.status = 'Won - Paid'
+                    bid.status_class = 'won paid'
+                    bid.already_paid = True
+                else:
+                    bid.status = 'Won'
+                    bid.status_class = 'won'
+                    bid.already_paid = False
+                
                 won_auctions.append(bid)
             else:
                 bid.status = 'Lost'
