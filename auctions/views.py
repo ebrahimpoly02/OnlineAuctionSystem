@@ -99,12 +99,12 @@ def register(request):
         
         # Create user
         user = User.objects.create_user(
-    username=username,
-    email=email,
-    password=password,
-    is_seller=is_seller
-)
-user.phone = phone
+            username=username,
+            email=email,
+            password=password,
+            is_seller=is_seller
+        )
+        user.phone = phone
         user.save()
         messages.success(request, 'Account created successfully! Please login.')
         return redirect('login')
