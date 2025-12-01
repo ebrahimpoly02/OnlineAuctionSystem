@@ -82,6 +82,7 @@ def register(request):
         password = request.POST['password']
         confirm_password = request.POST['confirm_password']
         is_seller = request.POST.get('is_seller') == 'on'
+        phone = request.POST.get('phone', '').strip()
         
         # Validation
         if password != confirm_password:
@@ -98,11 +99,12 @@ def register(request):
         
         # Create user
         user = User.objects.create_user(
-            username=username,
-            email=email,
-            password=password,
-            is_seller=is_seller
-        )
+    username=username,
+    email=email,
+    password=password,
+    is_seller=is_seller
+)
+user.phone = phone
         user.save()
         messages.success(request, 'Account created successfully! Please login.')
         return redirect('login')
@@ -615,3 +617,63 @@ def account(request):
         'order_history': order_history,
     }
     return render(request, 'auctions/account.html', context)
+@login_required
+def edit_account(request):
+    """Edit user account details"""
+    if request.method == 'POST':
+        username = request.POST.get('username', '').strip()
+        email = request.POST.get('email', '').strip()
+        current_password = request.POST.get('current_password', '')
+        new_password = request.POST.get('new_password', '')
+        confirm_password = request.POST.get('confirm_password', '')
+        
+        errors = []
+        
+        # Validate username (if changed)
+        if username != request.user.username:
+            if not username:
+                errors.append('Username cannot be empty.')
+            elif User.objects.filter(username=username).exists():
+                errors.append('Username already taken.')
+            else:
+                request.user.username = username
+        
+        # Validate email (if changed)
+        if email != request.user.email:
+            if not email:
+                errors.append('Email cannot be empty.')
+            elif User.objects.filter(email=email).exists():
+                errors.append('Email already registered.')
+            else:
+                request.user.email = email
+        
+        # Validate password change (if requested)
+        if new_password:
+            if not current_password:
+                errors.append('Current password is required to change password.')
+            elif not request.user.check_password(current_password):
+                errors.append('Current password is incorrect.')
+            elif len(new_password) < 8:
+                errors.append('New password must be at least 8 characters.')
+            elif new_password != confirm_password:
+                errors.append('New passwords do not match.')
+            else:
+                request.user.set_password(new_password)
+        
+        if errors:
+            for error in errors:
+                messages.error(request, error)
+            return redirect('edit_account')
+        
+        # Save changes
+        request.user.save()
+        
+        # If password was changed, update session
+        if new_password:
+            from django.contrib.auth import update_session_auth_hash
+            update_session_auth_hash(request, request.user)
+        
+        messages.success(request, 'Account updated successfully!')
+        return redirect('account')
+    
+    return render(request, 'auctions/edit_account.html')

@@ -15,4 +15,5 @@ path('auction/<int:auction_id>/watchlist/remove/', views.remove_from_watchlist, 
 path('auction/<int:auction_id>/buy-now/', views.buy_now, name='buy_now'),
 path('auction/<int:auction_id>/buy-now/process/', views.process_buy_now, name='process_buy_now'),
 path('account/', views.account, name='account'),
+path('account/edit/', views.edit_account, name='edit_account'),
 ]
