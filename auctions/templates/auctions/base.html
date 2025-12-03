@@ -232,6 +232,11 @@
         
       <div class="auth-buttons">
     {% if user.is_authenticated %}
+        {% if user.is_admin %}
+            <a href="{% url 'admin_dashboard' %}" style="color: #FFA500; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 0.3rem;">
+                🛡️ Admin
+            </a>
+        {% endif %}
         <div class="account-dropdown">
             <a href="{% url 'account' %}" style="color: white; text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
                 Your Account

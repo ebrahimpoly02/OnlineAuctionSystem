@@ -1,0 +1,312 @@
+{% extends 'auctions/base.html' %}
+{% load static %}
+
+{% block title %}Admin Dashboard - Bidfinity{% endblock %}
+
+{% block content %}
+<style>
+    .admin-container {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    
+    .admin-header {
+        background: white;
+        padding: 2rem;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .admin-header h1 {
+        font-size: 2rem;
+        margin: 0 0 0.5rem 0;
+        color: #1a2332;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #1a2332;
+        margin: 0;
+    }
+    
+    .stat-label {
+        color: #666;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+    
+    .admin-section {
+        background: white;
+        padding: 2rem;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .admin-section h2 {
+        font-size: 1.5rem;
+        margin: 0 0 1.5rem 0;
+        color: #1a2332;
+    }
+    
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .data-table th {
+        text-align: left;
+        padding: 1rem;
+        background: #f9f9f9;
+        font-weight: 600;
+        color: #1a2332;
+        border-bottom: 2px solid #e0e0e0;
+    }
+    
+    .data-table td {
+        padding: 1rem;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .data-table tr:hover {
+        background: #f9f9f9;
+    }
+    
+    .badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    
+    .badge-active {
+        background: #e8f5e9;
+        color: #2e7d32;
+    }
+    
+    .badge-inactive {
+        background: #ffebee;
+        color: #c62828;
+    }
+    
+    .badge-seller {
+        background: #e3f2fd;
+        color: #1565c0;
+    }
+    
+    .badge-buyer {
+        background: #f3e5f5;
+        color: #6a1b9a;
+    }
+    
+    .btn-action {
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 0.85rem;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        margin-right: 0.5rem;
+    }
+    
+    .btn-ban {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .btn-ban:hover {
+        background: #c82333;
+    }
+    
+    .btn-unban {
+        background: #28a745;
+        color: white;
+    }
+    
+    .btn-unban:hover {
+        background: #218838;
+    }
+    
+    .btn-delete {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .btn-delete:hover {
+        background: #c82333;
+    }
+    
+    .btn-view {
+        background: #007bff;
+        color: white;
+    }
+    
+    .btn-view:hover {
+        background: #0056b3;
+    }
+</style>
+
+<div class="admin-container">
+    <!-- Header -->
+    <div class="admin-header">
+        <h1>Admin Dashboard</h1>
+        <p style="color: #666; margin: 0;">Manage users, auctions, and platform activity</p>
+    </div>
+    
+    <!-- Statistics -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <p class="stat-number">{{ total_users }}</p>
+            <p class="stat-label">Total Users</p>
+        </div>
+        <div class="stat-card">
+            <p class="stat-number">{{ total_sellers }}</p>
+            <p class="stat-label">Sellers</p>
+        </div>
+        <div class="stat-card">
+            <p class="stat-number">{{ total_auctions }}</p>
+            <p class="stat-label">Total Auctions</p>
+        </div>
+        <div class="stat-card">
+            <p class="stat-number">{{ active_auctions }}</p>
+            <p class="stat-label">Active Auctions</p>
+        </div>
+        <div class="stat-card">
+            <p class="stat-number">{{ total_transactions }}</p>
+            <p class="stat-label">Transactions</p>
+        </div>
+        <div class="stat-card">
+            <p class="stat-number">{{ total_revenue|floatformat:2 }} BHD</p>
+            <p class="stat-label">Total Revenue</p>
+        </div>
+    </div>
+    
+    <!-- User Management -->
+    <div class="admin-section">
+        <h2>User Management</h2>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th>Joined</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in all_users %}
+                <tr>
+                    <td><strong>{{ user.username }}</strong></td>
+                    <td>{{ user.email }}</td>
+                    <td>
+                        {% if user.is_admin %}
+                            <span class="badge badge-seller">Admin</span>
+                        {% elif user.is_seller %}
+                            <span class="badge badge-seller">Seller</span>
+                        {% else %}
+                            <span class="badge badge-buyer">Buyer</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if user.is_active %}
+                            <span class="badge badge-active">Active</span>
+                        {% else %}
+                            <span class="badge badge-inactive">Banned</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ user.date_joined|date:"M d, Y" }}</td>
+                    <td>
+                        {% if not user.is_admin %}
+                            {% if user.is_active %}
+                                <a href="{% url 'admin_ban_user' user.id %}" 
+                                   class="btn-action btn-ban"
+                                   onclick="return confirm('Ban user {{ user.username }}?')">
+                                    Ban
+                                </a>
+                            {% else %}
+                                <a href="{% url 'admin_ban_user' user.id %}" 
+                                   class="btn-action btn-unban"
+                                   onclick="return confirm('Unban user {{ user.username }}?')">
+                                    Unban
+                                </a>
+                            {% endif %}
+                        {% else %}
+                            <span style="color: #999;">Admin</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Auction Moderation -->
+    <div class="admin-section">
+        <h2>Recent Auctions (Moderation)</h2>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Seller</th>
+                    <th>Price</th>
+                    <th>Status</th>
+                    <th>Bids</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for auction in all_auctions %}
+                <tr>
+                    <td><strong>{{ auction.title|truncatewords:5 }}</strong></td>
+                    <td>{{ auction.seller.username }}</td>
+                    <td>{{ auction.current_price }} BHD</td>
+                    <td>
+                        {% if auction.status == 'active' %}
+                            <span class="badge badge-active">Active</span>
+                        {% elif auction.status == 'sold' %}
+                            <span class="badge badge-seller">Sold</span>
+                        {% else %}
+                            <span class="badge badge-inactive">{{ auction.status|title }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ auction.bids.count }}</td>
+                    <td>{{ auction.created_at|date:"M d, Y" }}</td>
+                    <td>
+                        <a href="{% url 'auction_detail' auction.id %}" 
+                           class="btn-action btn-view"
+                           target="_blank">
+                            View
+                        </a>
+                        <a href="{% url 'admin_delete_auction' auction.id %}" 
+                           class="btn-action btn-delete"
+                           onclick="return confirm('Delete auction {{ auction.title }}? This cannot be undone.')">
+                            Delete
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

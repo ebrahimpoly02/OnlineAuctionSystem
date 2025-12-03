@@ -8,7 +8,7 @@ from django.utils import timezone
 from datetime import timedelta, datetime, time
 from django.db.models import Q
 from .models import Payment
-
+from django.db.models import Sum
 
 # Homepage with search and filters
 def index(request):
@@ -898,3 +898,83 @@ def rate_seller(request, payment_id):
         'seller': payment.seller,
     }
     return render(request, 'auctions/rate_seller.html', context)
+@login_required
+def admin_dashboard(request):
+    """Admin dashboard - only accessible to admin users"""
+    # Check if user is admin
+    if not request.user.is_admin:
+        messages.error(request, 'Access denied. Admin privileges required.')
+        return redirect('index')
+    
+    # Get statistics
+    from .models import Payment
+    from django.db.models import Sum
+    total_users = User.objects.count()
+    total_sellers = User.objects.filter(is_seller=True).count()
+    total_auctions = Auction.objects.count()
+    active_auctions = Auction.objects.filter(status='active').count()
+    total_transactions = Payment.objects.filter(status='completed').count()
+    total_revenue = Payment.objects.filter(status='completed').aggregate(total=Sum('amount'))['total'] or 0
+    
+    # Get all users (for management)
+    all_users = User.objects.all().order_by('-date_joined')
+    
+    # Get all auctions (for moderation)
+    all_auctions = Auction.objects.all().order_by('-created_at')[:50]  # Limit to 50 most recent
+    
+    context = {
+        'total_users': total_users,
+        'total_sellers': total_sellers,
+        'total_auctions': total_auctions,
+        'active_auctions': active_auctions,
+        'total_transactions': total_transactions,
+        'total_revenue': total_revenue,
+        'all_users': all_users,
+        'all_auctions': all_auctions,
+    }
+    return render(request, 'auctions/admin_dashboard.html', context)
+
+@login_required
+def admin_ban_user(request, user_id):
+    """Ban/unban user"""
+    if not request.user.is_admin:
+        messages.error(request, 'Access denied.')
+        return redirect('index')
+    
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        messages.error(request, 'User not found.')
+        return redirect('admin_dashboard')
+    
+    # Don't allow banning admins
+    if user.is_admin:
+        messages.error(request, 'Cannot ban admin users.')
+        return redirect('admin_dashboard')
+    
+    # Toggle active status
+    user.is_active = not user.is_active
+    user.save()
+    
+    status = "banned" if not user.is_active else "unbanned"
+    messages.success(request, f'User {user.username} has been {status}.')
+    return redirect('admin_dashboard')
+
+@login_required
+def admin_delete_auction(request, auction_id):
+    """Delete inappropriate auction"""
+    if not request.user.is_admin:
+        messages.error(request, 'Access denied.')
+        return redirect('index')
+    
+    try:
+        auction = Auction.objects.get(id=auction_id)
+    except Auction.DoesNotExist:
+        messages.error(request, 'Auction not found.')
+        return redirect('admin_dashboard')
+    
+    auction_title = auction.title
+    auction.delete()
+    
+    messages.success(request, f'Auction "{auction_title}" has been deleted.')
+    return redirect('admin_dashboard')
