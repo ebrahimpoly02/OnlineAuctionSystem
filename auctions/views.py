@@ -698,14 +698,13 @@ def edit_listing(request, auction_id):
         messages.error(request, 'You can only edit your own auctions.')
         return redirect('account')
     
-    # Check if auction has bids
-    if auction.bids.exists():
-        messages.error(request, 'Cannot edit auction that has bids.')
-        return redirect('auction_detail', auction_id=auction_id)
-    
-    # Check if auction has ended
+    # Check if auction has ended or sold
     if auction.end_time <= timezone.now():
         messages.error(request, 'Cannot edit ended auction.')
+        return redirect('auction_detail', auction_id=auction_id)
+
+    if auction.status == 'sold':
+        messages.error(request, 'Cannot edit sold auction.')
         return redirect('auction_detail', auction_id=auction_id)
     
     if request.method == 'POST':
@@ -717,23 +716,29 @@ def edit_listing(request, auction_id):
         auction.location = request.POST.get('location')
         auction.shipping_method = request.POST.get('shipping_method')
         
+        # Check again if auction has bids (for price editing)
+        has_bids = auction.bids.exists()
+
         # Prices
         try:
-            auction.starting_price = float(request.POST.get('starting_price', 0))
-            auction.current_price = auction.starting_price  # Reset current price
+            if not has_bids:
+                auction.starting_price = float(request.POST.get('starting_price', 0))
+                auction.current_price = auction.starting_price  # Reset if no bids
+
             auction.minimum_bid_increment = float(request.POST.get('minimum_bid_increment', 1))
-            
+
             buy_now_price = request.POST.get('buy_now_price', '').strip()
             auction.buy_now_price = float(buy_now_price) if buy_now_price else None
-            
+
             if auction.shipping_method == 'shipping':
                 auction.shipping_cost = float(request.POST.get('shipping_cost', 0))
             else:
                 auction.shipping_cost = None
+
         except ValueError:
             messages.error(request, 'Invalid price values.')
             return redirect('edit_listing', auction_id=auction_id)
-        
+
         # Validation
         if not auction.title or not auction.description:
             messages.error(request, 'Title and description are required.')
@@ -746,29 +751,29 @@ def edit_listing(request, auction_id):
         # Save auction
         auction.save()
         
-        # Handle new images (optional)
+        # Save additional new images
         new_images = request.FILES.getlist('new_images')
-        if new_images:
-            for image in new_images[:5]:  # Limit to 5 images
-                AuctionImage.objects.create(
-                    auction=auction,
-                    image=image,
-                    is_primary=False
-                )
+        for img in new_images[:5]:
+            AuctionImage.objects.create(
+                auction=auction,
+                image=img,
+                is_primary=False
+            )
         
         messages.success(request, 'Auction updated successfully!')
         return redirect('auction_detail', auction_id=auction_id)
-    
-    # GET request - show form
+
+    # GET request show edit form
     categories = Category.objects.all()
     images = auction.images.all()
-    
+
     context = {
         'auction': auction,
         'categories': categories,
         'images': images,
     }
     return render(request, 'auctions/edit_listing.html', context)
+
 
 @login_required
 def delete_image(request, image_id):
@@ -787,9 +792,7 @@ def delete_image(request, image_id):
         return redirect('account')
     
     # Check if auction has bids
-    if auction.bids.exists():
-        messages.error(request, 'Cannot delete images from auction that has bids.')
-        return redirect('auction_detail', auction_id=auction.id)
+    has_bids = auction.bids.exists()
     
     # Delete image
     image.delete()

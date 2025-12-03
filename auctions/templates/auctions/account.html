@@ -335,8 +335,14 @@
                             <p>Current price: <strong>{{ listing.current_price }} BHD</strong></p>
                             <p>Bids: {{ listing.bid_count }} | Status: {{ listing.get_status_display }}</p>
                         </div>
-                    <span class="status-badge">{{ listing.display_status }}</span>
-                    </div>
+<div style="display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-end;">
+    <span class="status-badge">{{ listing.display_status }}</span>
+    {% if listing.display_status != 'Sold' %}
+    <a href="{% url 'edit_listing' listing.id %}" style="padding: 0.5rem 1rem; background-color: #1a2332; color: white; text-decoration: none; border-radius: 6px; text-align: center; font-size: 0.9rem;">
+        Edit
+    </a>
+    {% endif %}
+</div>                   </div>
                     {% endfor %}
                 </div>
             {% else %}
