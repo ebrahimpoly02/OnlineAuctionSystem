@@ -799,3 +799,29 @@ def delete_image(request, image_id):
     image.delete()
     messages.success(request, 'Image deleted successfully.')
     return redirect('edit_listing', auction_id=auction.id)
+
+@login_required
+def delete_listing(request, auction_id):
+    """Delete auction listing (only if no bids)"""
+    try:
+        auction = Auction.objects.get(id=auction_id)
+    except Auction.DoesNotExist:
+        messages.error(request, 'Auction not found.')
+        return redirect('account')
+    
+    # Check if user is the seller
+    if auction.seller != request.user:
+        messages.error(request, 'You can only delete your own auctions.')
+        return redirect('account')
+    
+    # Check if auction has bids
+    if auction.bids.exists():
+        messages.error(request, 'Cannot delete auction that has bids.')
+        return redirect('account')
+    
+    # Delete the auction (images will cascade delete automatically)
+    auction_title = auction.title
+    auction.delete()
+    
+    messages.success(request, f'Auction "{auction_title}" has been deleted successfully.')
+    return redirect('account')
