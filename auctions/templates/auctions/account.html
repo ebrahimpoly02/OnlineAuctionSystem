@@ -306,7 +306,6 @@
                 {% endif %}
             {% else %}
                 <div class="empty-state">
-                    <div class="empty-state-icon">📋</div>
                     <h3>No bids yet</h3>
                     <p>Start bidding on auctions to see them here!</p>
                     <a href="{% url 'index' %}" class="btn">Browse Auctions</a>
@@ -385,12 +384,21 @@
                             {% endif %}
                         </div>
                         <div class="item-info">
-                            <h3><a href="{% url 'auction_detail' order.auction.id %}" style="color: #1a2332; text-decoration: none;">{{ order.auction.title }}</a></h3>
-                            <p>Amount paid: <strong>{{ order.amount }} BHD</strong></p>
-                            <p>Seller: {{ order.seller.username }}</p>
-                            <p>Date: {{ order.transaction_date|date:"M d, Y" }}</p>
-                        </div>
-                        <span class="status-badge winning">Paid</span>
+    <h3><a href="{% url 'auction_detail' order.auction.id %}" style="color: #1a2332; text-decoration: none;">{{ order.auction.title }}</a></h3>
+    <p>Amount paid: <strong>{{ order.amount }} BHD</strong></p>
+    <p>Seller: {{ order.seller.username }}</p>
+    <p>Date: {{ order.transaction_date|date:"M d, Y" }}</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-end;">
+    <span class="status-badge winning">Paid ✓</span>
+    {% if not order.has_rating %}
+    <a href="{% url 'rate_seller' order.id %}" style="padding: 0.5rem 1rem; background-color: #FFA500; color: white; text-decoration: none; border-radius: 6px; text-align: center; font-size: 0.9rem;">
+        Rate Seller
+    </a>
+    {% else %}
+    <span style="color: #666; font-size: 0.9rem;">Rated</span>
+    {% endif %}
+</div>
                     </div>
                     {% endfor %}
                 </div>

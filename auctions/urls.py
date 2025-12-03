@@ -19,4 +19,5 @@ path('account/edit/', views.edit_account, name='edit_account'),
 path('auction/<int:auction_id>/edit/', views.edit_listing, name='edit_listing'),
 path('image/<int:image_id>/delete/', views.delete_image, name='delete_image'),
 path('auction/<int:auction_id>/delete/', views.delete_listing, name='delete_listing'),
+path('rate-seller/<int:payment_id>/', views.rate_seller, name='rate_seller'),
 ]

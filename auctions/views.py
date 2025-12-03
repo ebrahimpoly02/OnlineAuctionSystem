@@ -7,6 +7,8 @@ from .forms import AuctionForm
 from django.utils import timezone
 from datetime import timedelta, datetime, time
 from django.db.models import Q
+from .models import Payment
+
 
 # Homepage with search and filters
 def index(request):
@@ -608,8 +610,16 @@ def account(request):
                 listing.display_status = 'Active'
     
     # Get order history (Buy Now purchases and won auctions paid)
-    from .models import Payment
+    from .models import Payment, Rating
     order_history = Payment.objects.filter(buyer=request.user, status='completed').order_by('-transaction_date')
+
+# Check if each order has been rated
+    for order in order_history:
+     order.has_rating = Rating.objects.filter(
+        rater_user=request.user,
+        rated_user=order.seller,
+        auction=order.auction
+    ).exists()
     
     context = {
         'active_bids': active_bids,
@@ -825,3 +835,56 @@ def delete_listing(request, auction_id):
     
     messages.success(request, f'Auction "{auction_title}" has been deleted successfully.')
     return redirect('account')
+@login_required
+def rate_seller(request, payment_id):
+    """Rate seller after completed transaction"""
+    try:
+        payment = Payment.objects.get(id=payment_id, buyer=request.user, status='completed')
+    except Payment.DoesNotExist:
+        messages.error(request, 'Payment not found.')
+        return redirect('account')
+    
+    # Check if already rated
+    from .models import Rating
+    already_rated = Rating.objects.filter(
+        rater_user=request.user,
+        rated_user=payment.seller,
+        auction=payment.auction
+    ).exists()
+    
+    if already_rated:
+        messages.info(request, 'You have already rated this seller.')
+        return redirect('account')
+    
+    if request.method == 'POST':
+        rating_score = request.POST.get('rating_score')
+        comment = request.POST.get('comment', '').strip()
+        
+        # Validation
+        try:
+            rating_score = int(rating_score)
+            if rating_score < 1 or rating_score > 5:
+                messages.error(request, 'Rating must be between 1 and 5.')
+                return redirect('rate_seller', payment_id=payment_id)
+        except (ValueError, TypeError):
+            messages.error(request, 'Invalid rating.')
+            return redirect('rate_seller', payment_id=payment_id)
+        
+        # Create rating
+        Rating.objects.create(
+            rater_user=request.user,
+            rated_user=payment.seller,
+            auction=payment.auction,
+            rating_score=rating_score,
+            comment=comment
+        )
+        
+        messages.success(request, 'Thank you for rating the seller!')
+        return redirect('account')
+    
+    context = {
+        'payment': payment,
+        'auction': payment.auction,
+        'seller': payment.seller,
+    }
+    return render(request, 'auctions/rate_seller.html', context)
