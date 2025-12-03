@@ -434,11 +434,27 @@
         </div>
         
         <!-- seller Info -->
-        <div class="seller-section">
-            <h3>Seller Information</h3>
-            <p><strong>Seller:</strong> {{ auction.seller.username }}</p>
-            <p><strong>Member since:</strong> {{ auction.seller.date_joined|date:"F Y" }}</p>
-        </div>
+<div class="seller-section">
+    <h3>Seller Information</h3>
+    <p><strong>Seller:</strong> {{ auction.seller.username }}</p>
+    <p><strong>Member since:</strong> {{ auction.seller.date_joined|date:"F Y" }}</p>
+    {% if seller_total_ratings > 0 %}
+    <p style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem;">
+        <strong>Rating:</strong>
+        <span style="color: #FFA500; font-size: 1.2rem;">
+            {% if seller_avg_rating >= 4.5 %}★★★★★
+            {% elif seller_avg_rating >= 3.5 %}★★★★☆
+            {% elif seller_avg_rating >= 2.5 %}★★★☆☆
+            {% elif seller_avg_rating >= 1.5 %}★★☆☆☆
+            {% else %}★☆☆☆☆
+            {% endif %}
+        </span>
+        <span style="color: #666;">({{ seller_avg_rating|floatformat:1 }}/5 from {{ seller_total_ratings }} review{{ seller_total_ratings|pluralize }})</span>
+    </p>
+    {% else %}
+    <p style="color: #999; margin-top: 0.5rem;"><em>No ratings yet</em></p>
+    {% endif %}
+</div>
         
         <!-- bid History -->
         <div class="bid-history-section">

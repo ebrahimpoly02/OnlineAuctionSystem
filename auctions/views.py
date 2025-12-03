@@ -238,6 +238,14 @@ def auction_detail(request, auction_id):
         if request.user.is_authenticated:
             is_winner = (highest_bid.bidder == request.user)
     
+    # Calculate seller rating
+    from .models import Rating
+    from django.db.models import Avg, Count
+    seller_ratings = Rating.objects.filter(rated_user=auction.seller).aggregate(
+        avg_rating=Avg('rating_score'),
+        total_ratings=Count('id')
+    )
+    
     context = {
         'auction': auction,
         'images': images,
@@ -248,6 +256,8 @@ def auction_detail(request, auction_id):
         'auction_ended': auction_ended,
         'is_winner': is_winner,
         'winner_username': winner_username,
+        'seller_avg_rating': seller_ratings['avg_rating'],
+        'seller_total_ratings': seller_ratings['total_ratings'],
     }
     return render(request, 'auctions/auction_detail.html', context)
     
