@@ -296,12 +296,9 @@
             <div class="images-grid">
                 {% for image in images %}
                 <div class="image-item">
-                    <img src="{{ image.image.url }}" alt="Auction image">
-                    <form method="post" action="{% url 'delete_image' image.id %}" style="display: inline;">
-                        {% csrf_token %}
-                        <button type="submit" class="delete-image-btn" onclick="return confirm('Delete this image?')">×</button>
-                    </form>
-                </div>
+    <img src="{{ image.image.url }}" alt="Auction image">
+    <a href="{% url 'delete_image' image.id %}" class="delete-image-btn" onclick="return confirm('Delete this image?')" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">×</a>
+</div>
                 {% endfor %}
             </div>
             {% else %}
