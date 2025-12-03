@@ -898,6 +898,7 @@ def rate_seller(request, payment_id):
         'seller': payment.seller,
     }
     return render(request, 'auctions/rate_seller.html', context)
+
 @login_required
 def admin_dashboard(request):
     """Admin dashboard - only accessible to admin users"""
@@ -909,10 +910,13 @@ def admin_dashboard(request):
     # Get statistics
     from .models import Payment
     from django.db.models import Sum
+    from django.utils import timezone
+    
     total_users = User.objects.count()
     total_sellers = User.objects.filter(is_seller=True).count()
     total_auctions = Auction.objects.count()
-    active_auctions = Auction.objects.filter(status='active').count()
+    now = timezone.now()
+    active_auctions = Auction.objects.filter(status='active', end_time__gt=now).count()
     total_transactions = Payment.objects.filter(status='completed').count()
     total_revenue = Payment.objects.filter(status='completed').aggregate(total=Sum('amount'))['total'] or 0
     
@@ -921,6 +925,15 @@ def admin_dashboard(request):
     
     # Get all auctions (for moderation)
     all_auctions = Auction.objects.all().order_by('-created_at')[:50]  # Limit to 50 most recent
+    
+    # Add actual status for each auction
+    for auction in all_auctions:
+        if auction.status == 'sold':
+            auction.actual_status = 'Sold'
+        elif auction.end_time <= now:
+            auction.actual_status = 'Ended'
+        else:
+            auction.actual_status = 'Active'
     
     context = {
         'total_users': total_users,

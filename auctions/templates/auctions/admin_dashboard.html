@@ -281,14 +281,14 @@
                     <td>{{ auction.seller.username }}</td>
                     <td>{{ auction.current_price }} BHD</td>
                     <td>
-                        {% if auction.status == 'active' %}
-                            <span class="badge badge-active">Active</span>
-                        {% elif auction.status == 'sold' %}
-                            <span class="badge badge-seller">Sold</span>
-                        {% else %}
-                            <span class="badge badge-inactive">{{ auction.status|title }}</span>
-                        {% endif %}
-                    </td>
+    {% if auction.actual_status == 'Active' %}
+        <span class="badge badge-active">Active</span>
+    {% elif auction.actual_status == 'Sold' %}
+        <span class="badge badge-seller">Sold</span>
+    {% else %}
+        <span class="badge badge-inactive">Ended</span>
+    {% endif %}
+</td>
                     <td>{{ auction.bids.count }}</td>
                     <td>{{ auction.created_at|date:"M d, Y" }}</td>
                     <td>
