@@ -15,8 +15,9 @@ def index(request):
     category_filter = request.GET.get('category', '')
     sort_by = request.GET.get('sort', '-created_at')
     
-    # Start with all active auctions
-    auctions = Auction.objects.filter(status='active')
+    # Start with all active auctions that haven't ended
+    now = timezone.now()
+    auctions = Auction.objects.filter(status='active', end_time__gt=now)
     
     # Apply search filter
     if search_query:
