@@ -9,6 +9,8 @@ from datetime import timedelta, datetime, time
 from django.db.models import Q
 from .models import Payment
 from django.db.models import Sum
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 # Homepage with search and filters
 def index(request):
@@ -333,6 +335,19 @@ def place_bid(request, auction_id):
     # update auction current price
     auction.current_price = bid_amount
     auction.save()
+    
+    # Broadcast bid update via WebSocket
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        f'auction_{auction.id}',
+        {
+            'type': 'bid_update',
+            'bid_amount': str(bid_amount),
+            'bidder': request.user.username,
+            'bid_time': bid.bid_time.strftime('%Y-%m-%d %H:%M:%S'),
+            'current_price': str(auction.current_price)
+        }
+    )
     
     # Send email notification to seller
     try:

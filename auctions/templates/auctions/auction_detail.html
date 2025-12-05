@@ -536,5 +536,99 @@
     // update immediately and every second
     updateCountdown();
     setInterval(updateCountdown, 1000);
+
+// WebSocket for real-time bid updates
+const auctionId = '{{ auction.id }}';
+const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+const wsUrl = `${protocol}//${window.location.host}/ws/auction/${auctionId}/`;
+
+const socket = new WebSocket(wsUrl);
+
+socket.onopen = function(e) {
+    console.log('WebSocket connected');
+};
+
+socket.onmessage = function(e) {
+    const data = JSON.parse(e.data);
+    
+    if (data.type === 'bid_update') {
+        // Update current price display
+        const priceElement = document.querySelector('.current-price');
+        if (priceElement) {
+            priceElement.textContent = data.current_price + ' BHD';
+            // Add visual feedback
+            priceElement.style.backgroundColor = '#ffffcc';
+            setTimeout(() => {
+                priceElement.style.backgroundColor = '';
+            }, 2000);
+        }
+        
+        // Add new bid to bid history (if bid history section exists)
+        const bidHistoryContainer = document.querySelector('.bid-history');
+        if (bidHistoryContainer) {
+            const newBidHtml = `
+                <div class="bid-item" style="background-color: #d4edda; padding: 10px; margin-bottom: 5px; border-radius: 5px; animation: fadeIn 0.5s;">
+                    <strong>${data.bidder}</strong> bid <strong>${data.bid_amount} BHD</strong>
+                    <br><small>${data.bid_time}</small>
+                </div>
+            `;
+            bidHistoryContainer.insertAdjacentHTML('afterbegin', newBidHtml);
+        }
+        
+        // Show a nice notification toast instead of alert
+        showNotification(`New bid: ${data.bid_amount} BHD by ${data.bidder}`);
+    }
+};
+
+socket.onclose = function(e) {
+    console.log('WebSocket closed');
+};
+
+socket.onerror = function(e) {
+    console.error('WebSocket error:', e);
+};
+
+// Nice notification function
+function showNotification(message) {
+    const notification = document.createElement('div');
+    notification.textContent = message;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #28a745;
+        color: white;
+        padding: 15px 20px;
+        border-radius: 5px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        z-index: 9999;
+        animation: slideIn 0.3s ease-out;
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease-out';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+// Add CSS animations
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from { transform: translateX(400px); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(400px); opacity: 0; }
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+`;
+document.head.appendChild(style);
 </script>
 {% endblock %}
