@@ -23,4 +23,5 @@ path('rate-seller/<int:payment_id>/', views.rate_seller, name='rate_seller'),
 path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
 path('admin-dashboard/ban-user/<int:user_id>/', views.admin_ban_user, name='admin_ban_user'),
 path('admin-dashboard/delete-auction/<int:auction_id>/', views.admin_delete_auction, name='admin_delete_auction'),
+path('activate/<uidb64>/<token>/', views.activate, name='activate'),
 ]

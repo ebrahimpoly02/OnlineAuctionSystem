@@ -77,7 +77,13 @@ def index(request):
     }
     return render(request, 'auctions/index.html', context)
 
-# User Registration
+from django.contrib.sites.shortcuts import get_current_site
+from django.template.loader import render_to_string
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import EmailMessage
+
 def register(request):
     if request.method == 'POST':
         username = request.POST['username']
@@ -101,16 +107,31 @@ def register(request):
             messages.error(request, 'Email already registered!')
             return redirect('register')
         
-        # Create user
+        # Create user (inactive until email verified)
         user = User.objects.create_user(
             username=username,
             email=email,
             password=password,
-            is_seller=is_seller
+            is_seller=is_seller,
+            is_active=False  # User inactive until email verified
         )
         user.phone = phone
         user.save()
-        messages.success(request, 'Account created successfully! Please login.')
+        
+        # Send verification email
+        current_site = get_current_site(request)
+        mail_subject = 'Activate your Auction Account'
+        message = render_to_string('auctions/email_verification.html', {
+            'user': user,
+            'domain': current_site.domain,
+            'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+            'token': default_token_generator.make_token(user),
+        })
+        to_email = email
+        email_message = EmailMessage(mail_subject, message, to=[to_email])
+        email_message.send()
+        
+        messages.success(request, 'Please check your email to activate your account!')
         return redirect('login')
     
     return render(request, 'auctions/register.html')
@@ -303,17 +324,44 @@ def place_bid(request, auction_id):
     
     # create the bid
     from .models import Bid
-    Bid.objects.create(
+    bid = Bid.objects.create(
         auction=auction,
         bidder=request.user,
         bid_amount=bid_amount
     )
     
-    # Update auction current price
+    # update auction current price
     auction.current_price = bid_amount
     auction.save()
     
-    messages.success(request, f'Your bid of {bid_amount:.2f} BHD has been placed successfully!')
+    # Send email notification to seller
+    try:
+        subject = f'New Bid on Your Auction: {auction.title}'
+        message = f"""
+Hi {auction.seller.username},
+
+Good news! Someone just placed a bid on your auction "{auction.title}".
+
+Bid Amount: {bid_amount} BHD
+Bidder: {request.user.username}
+Current Price: {auction.current_price} BHD
+
+View your auction: http://16.24.172.177/auction/{auction.id}/
+
+Best regards,
+Bidfinity Team
+        """
+        
+        email_message = EmailMessage(
+            subject,
+            message,
+            to=[auction.seller.email]
+        )
+        email_message.send(fail_silently=True)
+    except:
+        pass  # Don't fail if email doesn't send
+    
+    messages.success(request, f'Your bid of {bid_amount} BHD has been placed successfully!')
     return redirect('auction_detail', auction_id=auction_id)
 
 @login_required
@@ -535,7 +583,7 @@ def process_buy_now(request, auction_id):
         messages.error(request, 'You have already paid for this auction.')
         return redirect('auction_detail', auction_id=auction_id)
     
-    # If all validations passed, process payment 
+    # If all validations passed, process payment
     Payment.objects.create(
         auction=auction,
         buyer=request.user,
@@ -548,6 +596,58 @@ def process_buy_now(request, auction_id):
     # update auction status
     auction.status = 'sold'
     auction.save()
+    
+    # Send email notifications
+    try:
+        # Email to buyer (winner/purchaser)
+        buyer_subject = f'Payment Confirmed: {auction.title}'
+        buyer_message = f"""
+Hi {request.user.username},
+
+Your payment for "{auction.title}" has been confirmed!
+
+Amount Paid: {payment_amount} BHD
+Payment Method: Card ending in {card_number[-4:]}
+Seller: {auction.seller.username}
+
+Thank you for your purchase!
+
+Best regards,
+Auction Platform Team
+        """
+        
+        buyer_email = EmailMessage(
+            buyer_subject,
+            buyer_message,
+            to=[request.user.email]
+        )
+        buyer_email.send(fail_silently=True)
+        
+        # Email to seller
+        seller_subject = f'Item Sold: {auction.title}'
+        seller_message = f"""
+Hi {auction.seller.username},
+
+Congratulations! Your auction "{auction.title}" has been sold!
+
+Sale Price: {payment_amount} BHD
+Buyer: {request.user.username}
+Buyer Email: {request.user.email}
+
+Please arrange delivery with the buyer.
+
+Best regards,
+Auction Platform Team
+        """
+        
+        seller_email = EmailMessage(
+            seller_subject,
+            seller_message,
+            to=[auction.seller.email]
+        )
+        seller_email.send(fail_silently=True)
+    except:
+        pass  # Don't fail if email doesn't send
     
     messages.success(request, f'Purchase successful! You bought {auction.title} for {payment_amount} BHD.')
     return redirect('auction_detail', auction_id=auction_id)
@@ -991,3 +1091,18 @@ def admin_delete_auction(request, auction_id):
     
     messages.success(request, f'Auction "{auction_title}" has been deleted.')
     return redirect('admin_dashboard')
+def activate(request, uidb64, token):
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except:
+        user = None
+    
+    if user is not None and default_token_generator.check_token(user, token):
+        user.is_active = True
+        user.save()
+        messages.success(request, 'Your account has been activated! You can now login.')
+        return redirect('login')
+    else:
+        messages.error(request, 'Activation link is invalid!')
+        return redirect('login')
