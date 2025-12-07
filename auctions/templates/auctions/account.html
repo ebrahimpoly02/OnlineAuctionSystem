@@ -197,7 +197,8 @@
     <!-- Account header -->
     <div class="account-header">
         <h1>Your Account</h1>
-        <p>Welcome back, {{ user.username }}! Member since {{ user.date_joined|date:"F Y" }}</p>
+        <h1>Your Account</h1>
+        <p>Welcome back, {% if user.first_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %}! Member since {{ user.date_joined|date:"F Y" }}</p>
     </div>
     
     <!-- Tabs -->
@@ -216,11 +217,17 @@
         <div class="account-section">
             <h2>Account Details</h2>
             <div class="info-grid">
+                <div class="info-label">Full Name:</div>
+                <div class="info-value">{{ user.first_name }} {{ user.last_name }}</div>
+                
                 <div class="info-label">Username:</div>
                 <div class="info-value">{{ user.username }}</div>
                 
                 <div class="info-label">Email:</div>
                 <div class="info-value">{{ user.email }}</div>
+                
+                <div class="info-label">Phone:</div>
+                <div class="info-value">{% if user.phone %}{{ user.phone }}{% else %}Not provided{% endif %}</div>
                 
                 <div class="info-label">Account Type:</div>
                 <div class="info-value">{{ user.is_seller|yesno:"Seller,Buyer" }}</div>
@@ -228,7 +235,10 @@
                 <div class="info-label">Member Since:</div>
                 <div class="info-value">{{ user.date_joined|date:"F d, Y" }}</div>
             </div>
-            <a href="{% url 'edit_account' %}" style="display: inline-block; margin-top: 1.5rem; padding: 0.75rem 2rem; background-color: #1a2332; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">Edit Account</a>
+            <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+                <a href="{% url 'edit_account' %}" style="display: inline-block; padding: 0.75rem 2rem; background-color: #1a2332; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">Edit Account</a>
+                <a href="{% url 'delete_account' %}" onclick="return confirm('Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently deleted.');" style="display: inline-block; padding: 0.75rem 2rem; background-color: #dc3545; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">Delete Account</a>
+            </div>
         </div>
     </div>
     

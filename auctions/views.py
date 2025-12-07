@@ -11,7 +11,7 @@ from .models import Payment
 from django.db.models import Sum
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
-
+from django.core.mail import EmailMessage, send_mail
 # Homepage with search and filters
 def index(request):
     # Get search query and filters from GET parameters
@@ -88,6 +88,8 @@ from django.core.mail import EmailMessage
 
 def register(request):
     if request.method == 'POST':
+        first_name = request.POST['first_name']
+        last_name = request.POST['last_name']
         username = request.POST['username']
         email = request.POST['email']
         password = request.POST['password']
@@ -114,9 +116,11 @@ def register(request):
             username=username,
             email=email,
             password=password,
-            is_seller=is_seller,
-            is_active=False  # User inactive until email verified
+            is_active=False
         )
+        user.first_name = first_name
+        user.last_name = last_name
+        user.is_seller = is_seller
         user.phone = phone
         user.save()
         
@@ -784,7 +788,26 @@ def edit_account(request):
             elif User.objects.filter(email=email).exists():
                 errors.append('Email already registered.')
             else:
+                # Deactivate account and require email verification
                 request.user.email = email
+                request.user.is_active = False
+                
+                # Send new verification email
+                current_site = get_current_site(request)
+                mail_subject = 'Verify your new email address'
+                message = render_to_string('auctions/email_verification.html', {
+                    'user': request.user,
+                    'domain': current_site.domain,
+                    'uid': urlsafe_base64_encode(force_bytes(request.user.pk)),
+                    'token': default_token_generator.make_token(request.user),
+                })
+                send_mail(mail_subject, message, 'bidfinityauction@gmail.com', [email])
+                
+                # Save and logout user
+                request.user.save()
+                messages.success(request, 'Email updated! Please check your new email to verify it. You have been logged out.')
+                logout(request)
+                return redirect('login')
         
         # Update phone (optional field, always allow changes)
         request.user.phone = phone
@@ -1121,3 +1144,75 @@ def activate(request, uidb64, token):
     else:
         messages.error(request, 'Activation link is invalid!')
         return redirect('login')
+@login_required
+def delete_account(request):
+    """Allow users to delete their own account (PDPL compliance)"""
+    if request.method == 'POST':
+        user = request.user
+        logout(request)
+        user.delete()
+        messages.success(request, 'Your account has been successfully deleted.')
+        return redirect('index')
+    
+    return render(request, 'auctions/delete_account_confirm.html')
+def password_reset(request):
+    """Request password reset"""
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        
+        try:
+            user = User.objects.get(email=email)
+            
+            # Send password reset email
+            current_site = get_current_site(request)
+            mail_subject = 'Reset your Bidfinity password'
+            message = render_to_string('auctions/password_reset_email.html', {
+                'user': user,
+                'domain': current_site.domain,
+                'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+                'token': default_token_generator.make_token(user),
+            })
+            send_mail(mail_subject, message, 'bidfinityauction@gmail.com', [email])
+            
+            return redirect('password_reset_sent')
+        except User.DoesNotExist:
+            messages.error(request, 'No account found with that email address.')
+            return redirect('password_reset')
+    
+    return render(request, 'auctions/password_reset.html')
+
+def password_reset_sent(request):
+    """Show confirmation that reset email was sent"""
+    return render(request, 'auctions/password_reset_sent.html')
+
+def password_reset_confirm(request, uidb64, token):
+    """Confirm password reset and set new password"""
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+    
+    if user is not None and default_token_generator.check_token(user, token):
+        if request.method == 'POST':
+            password = request.POST.get('password')
+            confirm_password = request.POST.get('confirm_password')
+            
+            if password != confirm_password:
+                messages.error(request, 'Passwords do not match!')
+                return redirect('password_reset_confirm', uidb64=uidb64, token=token)
+            
+            if len(password) < 8:
+                messages.error(request, 'Password must be at least 8 characters long!')
+                return redirect('password_reset_confirm', uidb64=uidb64, token=token)
+            
+            user.set_password(password)
+            user.save()
+            
+            messages.success(request, 'Password successfully reset! You can now login.')
+            return redirect('login')
+        
+        return render(request, 'auctions/password_reset_confirm.html')
+    else:
+        messages.error(request, 'Password reset link is invalid or has expired.')
+        return redirect('password_reset')

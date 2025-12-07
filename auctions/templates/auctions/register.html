@@ -10,6 +10,16 @@
         {% csrf_token %}
         
         <div style="margin-bottom: 1rem;">
+            <label style="display: block; margin-bottom: 0.5rem;">First Name:</label>
+            <input type="text" name="first_name" required style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+            <label style="display: block; margin-bottom: 0.5rem;">Last Name:</label>
+            <input type="text" name="last_name" required style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
+        </div>
+
+        <div style="margin-bottom: 1rem;">
             <label style="display: block; margin-bottom: 0.5rem;">Username:</label>
             <input type="text" name="username" required style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 5px;">
         </div>

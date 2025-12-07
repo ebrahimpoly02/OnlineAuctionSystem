@@ -24,4 +24,8 @@ path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
 path('admin-dashboard/ban-user/<int:user_id>/', views.admin_ban_user, name='admin_ban_user'),
 path('admin-dashboard/delete-auction/<int:auction_id>/', views.admin_delete_auction, name='admin_delete_auction'),
 path('activate/<uidb64>/<token>/', views.activate, name='activate'),
+path('account/delete/', views.delete_account, name='delete_account'),
+path('password-reset/', views.password_reset, name='password_reset'),
+path('password-reset/sent/', views.password_reset_sent, name='password_reset_sent'),
+path('password-reset/<uidb64>/<token>/', views.password_reset_confirm, name='password_reset_confirm'),
 ]
