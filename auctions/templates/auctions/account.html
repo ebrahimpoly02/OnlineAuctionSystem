@@ -197,7 +197,6 @@
     <!-- Account header -->
     <div class="account-header">
         <h1>Your Account</h1>
-        <h1>Your Account</h1>
         <p>Welcome back, {% if user.first_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %}! Member since {{ user.date_joined|date:"F Y" }}</p>
     </div>
     
@@ -346,17 +345,16 @@
                         </div>
 <div style="display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-end;">
     <span class="status-badge">{{ listing.display_status }}</span>
-    {% if listing.display_status == 'Active' %}
-<a href="{% url 'edit_listing' listing.id %}" style="padding: 0.5rem 1rem; background-color: #1a2332; color: white; text-decoration: none; border-radius: 6px; text-align: center; font-size: 0.9rem;">
-    Edit
-</a>
-{% if listing.bid_count == 0 %}
-<a href="{% url 'delete_listing' listing.id %}" onclick="return confirm('Are you sure you want to delete this listing? This cannot be undone.')" style="padding: 0.5rem 1rem; background-color: #dc3545; color: white; text-decoration: none; border-radius: 6px; text-align: center; font-size: 0.9rem;">
-    Delete
-</a>
-{% endif %}
-{% endif %}
-</div>                   </div>
+    {% if listing.display_status == 'Active' and listing.bid_count == 0 %}
+        <a href="{% url 'edit_listing' listing.id %}" style="padding: 0.5rem 1rem; background-color: #1a2332; color: white; text-decoration: none; border-radius: 6px; text-align: center; font-size: 0.9rem;">
+            Edit
+        </a>
+        <a href="{% url 'delete_listing' listing.id %}" onclick="return confirm('Are you sure you want to delete this listing? This cannot be undone.')" style="padding: 0.5rem 1rem; background-color: #dc3545; color: white; text-decoration: none; border-radius: 6px; text-align: center; font-size: 0.9rem;">
+            Delete
+        </a>
+    {% endif %}
+</div>                   
+</div>
                     {% endfor %}
                 </div>
             {% else %}
