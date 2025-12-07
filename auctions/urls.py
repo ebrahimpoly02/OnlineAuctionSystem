@@ -28,4 +28,6 @@ path('account/delete/', views.delete_account, name='delete_account'),
 path('password-reset/', views.password_reset, name='password_reset'),
 path('password-reset/sent/', views.password_reset_sent, name='password_reset_sent'),
 path('password-reset/<uidb64>/<token>/', views.password_reset_confirm, name='password_reset_confirm'),
+path('privacy-policy/', views.privacy_policy, name='privacy_policy'),
+path('terms-of-service/', views.terms_of_service, name='terms_of_service'),
 ]

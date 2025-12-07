@@ -54,6 +54,13 @@
             </label>
         </div>
         
+        <div style="margin-bottom: 1rem;">
+            <label style="display: flex; align-items: flex-start; gap: 0.5rem;">
+                <input type="checkbox" name="agree_terms" required style="margin-top: 0.25rem;">
+                <span>I agree to the <a href="{% url 'terms_of_service' %}" target="_blank" style="color: #1a2332;">Terms of Service</a> and <a href="{% url 'privacy_policy' %}" target="_blank" style="color: #1a2332;">Privacy Policy</a></span>
+            </label>
+        </div>
+        
         <button type="submit" class="btn" style="width: 100%;">Register</button>
     </form>
     

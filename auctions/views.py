@@ -95,6 +95,12 @@ def register(request):
         password = request.POST['password']
         confirm_password = request.POST['confirm_password']
         is_seller = request.POST.get('is_seller') == 'on'
+        agree_terms = request.POST.get('agree_terms') == 'on'
+        
+        # Validation for terms agreement
+        if not agree_terms:
+            messages.error(request, 'You must agree to the Terms of Service and Privacy Policy to register.')
+            return redirect('register')
         phone_digits = request.POST.get('phone', '').strip()
         phone = f"973{phone_digits}" if phone_digits else ''
         
@@ -1216,3 +1222,10 @@ def password_reset_confirm(request, uidb64, token):
     else:
         messages.error(request, 'Password reset link is invalid or has expired.')
         return redirect('password_reset')
+def privacy_policy(request):
+    """Display privacy policy"""
+    return render(request, 'auctions/privacy_policy.html')
+
+def terms_of_service(request):
+    """Display terms of service"""
+    return render(request, 'auctions/terms_of_service.html')

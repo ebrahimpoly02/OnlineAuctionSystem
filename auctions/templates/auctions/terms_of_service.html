@@ -1,0 +1,135 @@
+{% extends 'auctions/base.html' %}
+
+{% block title %}Terms of Service - Bidfinity{% endblock %}
+
+{% block content %}
+<style>
+    h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+    h2 { font-size: 1.8rem; margin-top: 2rem; margin-bottom: 1rem; color: #1a2332; border-bottom: 2px solid #e0e0e0; padding-bottom: 0.5rem; }
+    p { margin-bottom: 1rem; color: #333; }
+    ul { margin-bottom: 1.5rem; }
+    li { margin-bottom: 0.5rem; }
+</style>
+<div style="max-width: 900px; margin: 2rem auto; padding: 2rem; line-height: 1.6;">
+    <h1>Terms of Service</h1>
+    <p style="color: #666; margin-bottom: 2rem;"><em>Last updated: December 2025</em></p>
+    
+    <h2>1. Acceptance of Terms</h2>
+    <p>By accessing and using Bidfinity ("Platform"), you agree to be bound by these Terms of Service and all applicable laws and regulations of the Kingdom of Bahrain. If you do not agree with any of these terms, you are prohibited from using this platform.</p>
+    
+    <h2>2. User Eligibility</h2>
+    <p>You must be at least 18 years of age to use this Platform. By registering, you represent and warrant that you are of legal age and have the right, authority, and capacity to enter into this agreement.</p>
+    
+    <h2>3. Account Registration and Security</h2>
+    <ul>
+        <li>You must provide accurate, current, and complete information during registration</li>
+        <li>You are responsible for maintaining the confidentiality of your account credentials</li>
+        <li>You agree to notify us immediately of any unauthorized access to your account</li>
+        <li>You are responsible for all activities that occur under your account</li>
+        <li>Email verification is required to activate your account</li>
+    </ul>
+    
+    <h2>4. User Conduct</h2>
+    <p>You agree NOT to:</p>
+    <ul>
+        <li>Post false, misleading, or fraudulent auction listings</li>
+        <li>Manipulate bidding through shill bidding or bid rigging</li>
+        <li>Harass, threaten, or abuse other users</li>
+        <li>Violate any local, national, or international laws</li>
+        <li>Infringe on intellectual property rights of others</li>
+        <li>Upload malicious software or attempt to compromise platform security</li>
+        <li>Use automated tools (bots) to manipulate auctions</li>
+    </ul>
+    
+    <h2>5. Auction Listings</h2>
+    <p><strong>For Sellers:</strong></p>
+    <ul>
+        <li>You must accurately describe items and provide truthful information</li>
+        <li>You retain ownership of items until sale is completed</li>
+        <li>You are responsible for setting accurate starting prices and auction durations</li>
+        <li>You must honor winning bids and complete transactions in good faith</li>
+        <li>You may edit or delete listings only before bids are placed</li>
+    </ul>
+    
+    <h2>6. Bidding and Transactions</h2>
+    <p><strong>For Buyers:</strong></p>
+    <ul>
+        <li>All bids constitute binding contracts to purchase if you win</li>
+        <li>You must complete payment for won auctions promptly</li>
+        <li>Bid increments must meet minimum requirements set by sellers</li>
+        <li>Auction end times are final; late bids will not be accepted</li>
+    </ul>
+    
+    <h2>7. Payment and Fees</h2>
+    <ul>
+        <li>Currently, Bidfinity does not charge listing or transaction fees (subject to change with notice)</li>
+        <li>Payment processing is handled through the platform's payment system</li>
+        <li>Buyers are responsible for any applicable shipping costs specified by sellers</li>
+    </ul>
+    
+    <h2>8. Prohibited Items</h2>
+    <p>The following items are strictly prohibited from being listed:</p>
+    <ul>
+        <li>Illegal goods or services under Bahraini law</li>
+        <li>Weapons, explosives, or hazardous materials</li>
+        <li>Stolen property or counterfeit goods</li>
+        <li>Adult content or services</li>
+        <li>Live animals (unless properly licensed)</li>
+        <li>Alcohol or tobacco products (unless properly licensed)</li>
+        <li>Items that violate intellectual property rights</li>
+    </ul>
+    
+    <h2>9. Intellectual Property</h2>
+    <p>All content on Bidfinity, including logos, text, graphics, and software, is the property of Bidfinity or its licensors and is protected by copyright and trademark laws. Users retain ownership of content they upload but grant Bidfinity a license to display and distribute such content on the platform.</p>
+    
+    <h2>10. Dispute Resolution</h2>
+    <p>In case of disputes between buyers and sellers:</p>
+    <ul>
+        <li>Users are encouraged to resolve disputes directly and amicably</li>
+        <li>Bidfinity may provide mediation assistance but is not obligated to do so</li>
+        <li>Bidfinity is not responsible for disputes arising from transactions</li>
+        <li>Legal disputes shall be governed by the laws of the Kingdom of Bahrain</li>
+    </ul>
+    
+    <h2>11. Limitation of Liability</h2>
+    <p>Bidfinity provides the platform "as is" without warranties of any kind. We are not liable for:</p>
+    <ul>
+        <li>Actions or conduct of users on the platform</li>
+        <li>Quality, safety, or legality of items listed</li>
+        <li>Accuracy of user-provided information</li>
+        <li>Failure to complete transactions</li>
+        <li>Loss of data due to technical issues</li>
+        <li>Indirect, incidental, or consequential damages</li>
+    </ul>
+    
+    <h2>12. Account Termination</h2>
+    <p>We reserve the right to suspend or terminate accounts that:</p>
+    <ul>
+        <li>Violate these Terms of Service</li>
+        <li>Engage in fraudulent or illegal activity</li>
+        <li>Receive multiple user complaints</li>
+        <li>Remain inactive for extended periods</li>
+    </ul>
+    <p>Users may delete their own accounts at any time through account settings.</p>
+    
+    <h2>13. Privacy and Data Protection</h2>
+    <p>Your use of Bidfinity is also governed by our <a href="{% url 'privacy_policy' %}">Privacy Policy</a>, which complies with Bahrain's Personal Data Protection Law (PDPL) No. 30 of 2018.</p>
+    
+    <h2>14. Modifications to Terms</h2>
+    <p>We reserve the right to modify these Terms of Service at any time. Users will be notified of significant changes via email or platform notification. Continued use of the platform after changes constitutes acceptance of modified terms.</p>
+    
+    <h2>15. Governing Law</h2>
+    <p>These Terms of Service are governed by and construed in accordance with the laws of the Kingdom of Bahrain. Any legal action or proceeding arising from these terms shall be brought exclusively in the courts of Bahrain.</p>
+    
+    <h2>16. Contact Information</h2>
+    <p>For questions about these Terms of Service, please contact us at:</p>
+    <p>
+        <strong>Email:</strong> bidfinityauction@gmail.com<br>
+        <strong>Platform:</strong> Bidfinity Online Auction System
+    </p>
+    
+    <p style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #ddd; color: #666;">
+        By using Bidfinity, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service.
+    </p>
+</div>
+{% endblock %}
