@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -12,6 +12,8 @@ from django.db.models import Sum
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from django.core.mail import EmailMessage, send_mail
+from .forms import ReportForm
+from .models import Report
 # Homepage with search and filters
 def index(request):
     # Get search query and filters from GET parameters
@@ -1079,6 +1081,11 @@ def admin_dashboard(request):
         else:
             auction.actual_status = 'Active'
     
+    # Get reports data
+    all_reports = Report.objects.select_related('auction', 'reporter', 'auction__seller').all()
+    pending_reports = all_reports.filter(status='pending')
+    recent_reports = all_reports[:20]  # Show last 20 reports
+    
     context = {
         'total_users': total_users,
         'total_sellers': total_sellers,
@@ -1088,6 +1095,8 @@ def admin_dashboard(request):
         'total_revenue': total_revenue,
         'all_users': all_users,
         'all_auctions': all_auctions,
+        'pending_reports': pending_reports,
+        'recent_reports': recent_reports,
     }
     return render(request, 'auctions/admin_dashboard.html', context)
 
@@ -1229,3 +1238,29 @@ def privacy_policy(request):
 def terms_of_service(request):
     """Display terms of service"""
     return render(request, 'auctions/terms_of_service.html')
+@login_required
+def report_auction(request, auction_id):
+    auction = get_object_or_404(Auction, id=auction_id)
+    
+    # Check if user already reported this auction
+    existing_report = Report.objects.filter(auction=auction, reporter=request.user).first()
+    if existing_report:
+        messages.warning(request, 'You have already reported this auction.')
+        return redirect('auction_detail', auction_id=auction_id)
+    
+    if request.method == 'POST':
+        form = ReportForm(request.POST)
+        if form.is_valid():
+            report = form.save(commit=False)
+            report.auction = auction
+            report.reporter = request.user
+            report.save()
+            messages.success(request, 'Report submitted successfully. Our team will review it shortly.')
+            return redirect('auction_detail', auction_id=auction_id)
+    else:
+        form = ReportForm()
+    
+    return render(request, 'auctions/report_auction.html', {
+        'form': form,
+        'auction': auction
+    })

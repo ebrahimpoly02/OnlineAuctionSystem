@@ -140,3 +140,34 @@ class Watchlist(models.Model):
     
     def __str__(self):
         return f"{self.user.username} watching {self.auction.title}"
+class Report(models.Model):
+    REPORT_REASONS = [
+        ('fake', 'Fake/Counterfeit Item'),
+        ('misleading', 'Misleading Description'),
+        ('inappropriate', 'Inappropriate Content'),
+        ('scam', 'Suspected Scam'),
+        ('other', 'Other'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('pending', 'Pending Review'),
+        ('reviewed', 'Reviewed'),
+        ('resolved', 'Resolved'),
+        ('dismissed', 'Dismissed'),
+    ]
+    
+    auction = models.ForeignKey(Auction, on_delete=models.CASCADE, related_name='reports')
+    reporter = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reports_made')
+    reason = models.CharField(max_length=20, choices=REPORT_REASONS)
+    description = models.TextField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+    reviewed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='reports_reviewed')
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    admin_notes = models.TextField(blank=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        
+    def __str__(self):
+        return f"Report on {self.auction.title} by {self.reporter.username}"

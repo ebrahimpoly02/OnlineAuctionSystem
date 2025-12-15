@@ -26,8 +26,7 @@ SECRET_KEY = 'django-insecure-vbw!4c4efshghdq4#a&!9h5l65yv8ifo=ka2t%@@dq5vu)!yrc
 DEBUG = False
 
 ALLOWED_HOSTS = ['16.24.172.177', 'localhost', '127.0.0.1']
-
-
+ALLOWED_HOSTS = ['16.24.172.177', 'ec2-16-24-172-177.me-south-1.compute.amazonaws.com', 'localhost']
 # Application definition
 
 INSTALLED_APPS = [
@@ -49,6 +48,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -115,12 +115,19 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'en'
 
-TIME_ZONE = 'Asia/Bahrain'  # CHANGED FROM 'UTC'
+LANGUAGES = [
+    ('en', 'English'),
+    ('ar', 'العربية'),
+]
+
+LOCALE_PATHS = [
+    BASE_DIR / 'locale',
+]
 
 USE_I18N = True
-
+USE_L10N = True
 USE_TZ = True
 
 
@@ -185,3 +192,9 @@ CHANNEL_LAYERS = {
         },
     },
 }
+
+# HTTPS Security Settings
+SECURE_SSL_REDIRECT = False  # handle redirect in Nginx
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True

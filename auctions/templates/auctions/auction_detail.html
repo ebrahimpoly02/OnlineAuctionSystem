@@ -292,7 +292,13 @@
     <!-- Right Side: Information -->
     <div class="info-section">
         <h1 class="auction-title">{{ auction.title }}</h1>
-        
+<div class="mt-2">
+    {% if user.is_authenticated and user != auction.seller %}
+    <a href="{% url 'report_auction' auction.id %}" class="btn btn-sm btn-outline-warning">
+        <i class="bi bi-flag"></i> Report This Auction
+    </a>
+    {% endif %}
+</div>        
         <!-- Price Section -->
         <div class="price-section">
             <p class="current-price">{{ auction.current_price }} BHD</p>

@@ -258,7 +258,77 @@
             </tbody>
         </table>
     </div>
-    
+<!-- Reports Management -->
+    <div class="admin-section">
+        <h2>Auction Reports</h2>
+        {% if pending_reports %}
+        <div style="background: #fff3cd; padding: 1rem; border-radius: 6px; margin-bottom: 1rem; border-left: 4px solid #ffc107;">
+            <strong>⚠️ {{ pending_reports.count }} pending report(s) require review</strong>
+        </div>
+        {% endif %}
+        
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Auction</th>
+                    <th>Reporter</th>
+                    <th>Reason</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for report in recent_reports %}
+                <tr>
+                    <td>
+                        <strong>{{ report.auction.title|truncatewords:5 }}</strong><br>
+                        <small style="color: #666;">by {{ report.auction.seller.username }}</small>
+                    </td>
+                    <td>{{ report.reporter.username }}</td>
+                    <td>
+                        <span class="badge" style="background: #fff3cd; color: #856404;">
+                            {{ report.get_reason_display }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if report.status == 'pending' %}
+                            <span class="badge" style="background: #ffc107; color: white;">Pending</span>
+                        {% elif report.status == 'reviewed' %}
+                            <span class="badge" style="background: #17a2b8; color: white;">Reviewed</span>
+                        {% elif report.status == 'resolved' %}
+                            <span class="badge badge-active">Resolved</span>
+                        {% else %}
+                            <span class="badge badge-inactive">Dismissed</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ report.created_at|date:"M d, Y H:i" }}</td>
+                    <td>
+                        <a href="{% url 'auction_detail' report.auction.id %}" 
+                           class="btn-action btn-view"
+                           target="_blank"
+                           title="View Auction">
+                            View Auction
+                        </a>
+                        <a href="/admin/auctions/report/{{ report.id }}/change/" 
+                           class="btn-action"
+                           style="background: #007bff; color: white;"
+                           target="_blank"
+                           title="Review in Admin Panel">
+                            Review
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align: center; color: #999; padding: 2rem;">
+                        No reports found
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>    
     <!-- Auction Moderation -->
     <div class="admin-section">
         <h2>Recent Auctions (Moderation)</h2>

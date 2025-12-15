@@ -1,5 +1,5 @@
 from django import forms
-from .models import Auction
+from .models import Auction, Report
 
 class MultipleFileInput(forms.ClearableFileInput):
     allow_multiple_selected = True
@@ -133,4 +133,20 @@ class AuctionForm(forms.ModelForm):
                 'placeholder': '0.00 BHD (if applicable)',
                 'step': '0.01'
             }),
+        }
+class ReportForm(forms.ModelForm):
+    class Meta:
+        model = Report
+        fields = ['reason', 'description']
+        widgets = {
+            'reason': forms.Select(attrs={'class': 'form-select'}),
+            'description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 4,
+                'placeholder': 'Please provide details about why you are reporting this auction...'
+            })
+        }
+        labels = {
+            'reason': 'Report Reason',
+            'description': 'Description (required)'
         }
