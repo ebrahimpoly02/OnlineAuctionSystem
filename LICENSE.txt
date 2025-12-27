@@ -1,0 +1,37 @@
+BIDFINITY - ONLINE AUCTION SYSTEM
+Copyright (c) 2024-2025 Ebrahim Buhaza
+
+This project incorporates the following third-party open-source software:
+
+Django Web Framework
+Copyright (c) Django Software Foundation
+License: BSD 3-Clause License
+https://github.com/django/django/blob/main/LICENSE
+
+Bootstrap CSS Framework
+Copyright (c) Twitter, Inc. and The Bootstrap Authors
+License: MIT License
+https://github.com/twbs/bootstrap/blob/main/LICENSE
+
+Redis
+Copyright (c) Redis Ltd.
+License: BSD 3-Clause License
+https://redis.io/docs/about/license/
+
+PostgreSQL Database
+Copyright (c) PostgreSQL Global Development Group
+License: PostgreSQL License
+https://www.postgresql.org/about/licence/
+
+Python Libraries:
+- psycopg2 (PostgreSQL adapter) - LGPL License
+- Pillow (Image processing) - HPND License
+- django-allauth (Authentication) - MIT License
+- channels (WebSocket support) - BSD License
+- channels-redis (Redis backend) - BSD License
+- daphne (ASGI server) - BSD License
+- boto3 (AWS SDK) - Apache License 2.0
+- django-storages (S3 integration) - BSD License
+
+All third-party software is used in accordance with their respective licenses.
+Full license texts available at the URLs listed above.
